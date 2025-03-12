@@ -1,4 +1,36 @@
-local isfile = isfile or function(file)
+local whitelist_url = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO/main/whitelist.txt"
+local player = game.Players.LocalPlayer
+local userId = tostring(player.UserId)
+
+local function getWhitelist()
+    local success, response = pcall(function()
+        return game:HttpGet(whitelist_url)
+    end)
+    
+    if success then
+        local whitelist = {}
+        for line in response:gmatch("[^\r\n]+") do
+            local name, id = line:match("(.+) %- (%d+)")
+            if name and id then
+                whitelist[id] = name
+            end
+        end
+        return whitelist
+    end
+    return nil
+end
+
+local whitelist = getWhitelist()
+if whitelist and whitelist[userId] then
+    local whitelistedName = whitelist[userId]
+
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Whitelisted Confirmed",
+        Text = "ur now whitelisted bitchass nigga, " .. whitelistedName .. "lol",
+        Duration = 3
+    })
+
+	local isfile = isfile or function(file)
 	local suc, res = pcall(function()
 		return readfile(file)
 	end)
@@ -56,4 +88,11 @@ if not shared.VapeDeveloper then
 	writefile('newvape/profiles/commit.txt', commit)
 end
 
-return loadstring(downloadFile('newvape/main.lua'), 'main')()
+ return loadstring(downloadFile('newvape/main.lua'), 'main')()
+else
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Access Denied",
+        Text = "ur not whitelisted nn lmao",
+        Duration = 5
+    })
+end
