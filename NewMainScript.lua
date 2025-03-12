@@ -1,4 +1,4 @@
-local whitelist_url = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO/main/whitelist.txt"
+local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistcheck/main/whitelist.json"
 local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
@@ -6,16 +6,15 @@ local function getWhitelist()
     local success, response = pcall(function()
         return game:HttpGet(whitelist_url)
     end)
-    
+
     if success then
-        local whitelist = {}
-        for line in response:gmatch("[^\r\n]+") do
-            local name, id = line:match("(.+) %- (%d+)")
-            if name and id then
-                whitelist[id] = name
-            end
+        local successDecode, whitelist = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(response)
+        end)
+
+        if successDecode then
+            return whitelist
         end
-        return whitelist
     end
     return nil
 end
@@ -25,9 +24,9 @@ if whitelist and whitelist[userId] then
     local whitelistedName = whitelist[userId]
 
     game.StarterGui:SetCore("SendNotification", {
-        Title = "Whitelisted Confirmed",
-        Text = "ur now whitelisted bitchass nigga, " .. whitelistedName .. "lol",
-        Duration = 3
+        Title = "Access Granted",
+        Text = "You're whitelisted, " .. whitelistedName .. "!",
+        Duration = 5
     })
 
 	local isfile = isfile or function(file)
