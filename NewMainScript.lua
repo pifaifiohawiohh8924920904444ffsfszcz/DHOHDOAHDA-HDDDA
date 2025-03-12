@@ -25,8 +25,8 @@ if whitelist and whitelist[userId] then
 
     game.StarterGui:SetCore("SendNotification", {
         Title = "Whitelist Confirmed",
-        Text = "ur now whitlisted bitchass nigga " .. whitelistedName .. "!",
-        Duration = 5
+        Text = "ur now whitlisted bitchass nigga " .. whitelistedName .. "",
+        Duration = 2
     })
 
 	local isfile = isfile or function(file)
@@ -92,6 +92,6 @@ else
     game.StarterGui:SetCore("SendNotification", {
         Title = "Fuck nah u thought",
         Text = "ur not whitelisted nn lmao",
-        Duration = 3
+        Duration = 2
     })
 end
