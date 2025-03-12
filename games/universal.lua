@@ -22,7 +22,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/wrealaero/AeroV4/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -460,21 +460,21 @@ run(function()
 					local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
 					local newchannel = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId)
 					if newchannel then
-						newchannel:SendAsync('; I USING AEROV4 VXPE')
+						newchannel:SendAsync('; I USING DHOHDOAHDA-HDDDA VXPE')
 					end
 					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
 					textChatService.ChannelTabsConfiguration.Enabled = false
 				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' ; I USING AEROV4 VXPE', 'All')
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' ; I USING DHOHDOAHDA-HDDDA VXPE', 'All')
 				end
 			end
 		end
 	end
 
 	function whitelist:process(msg, plr)
-		if plr == lplr and msg == '; I USING AEROV4 VXPE' then return true end
+		if plr == lplr and msg == '; I USING DHOHDOAHDA-HDDDA VXPE' then return true end
 
-		if self.localprio > 0 and not self.said[plr.Name] and msg == '; I USING AEROV4 VXPE' and plr ~= lplr then
+		if self.localprio > 0 and not self.said[plr.Name] and msg == '; I USING DHOHDOAHDA-HDDDA VXPE' and plr ~= lplr then
 			self.said[plr.Name] = true
 			notif('Vape', plr.Name..' is using vape!', 60)
 			self.customtags[plr.Name] = {{
@@ -552,7 +552,7 @@ run(function()
 				vape:Clean(exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
 					obj = obj:FindFirstChild('BodyText', true)
 					if obj and obj:IsA('TextLabel') then
-						if obj.Text:find('; I USING AEROV4 VXPE') then
+						if obj.Text:find('; I USING DHOHDOAHDA-HDDDA VXPE') then
 							obj.Parent.Parent.Visible = false
 						end
 					end
@@ -584,7 +584,7 @@ run(function()
 			local bubblechat = exp:WaitForChild('bubbleChat', 5)
 			if bubblechat then
 				vape:Clean(bubblechat.DescendantAdded:Connect(function(newbubble)
-					if newbubble:IsA('TextLabel') and newbubble.Text:find('; I USING AEROV4 VXPE') then
+					if newbubble:IsA('TextLabel') and newbubble.Text:find('; I USING DHOHDOAHDA-HDDDA VXPE') then
 						newbubble.Parent.Parent.Visible = false
 					end
 				end))
@@ -595,12 +595,12 @@ run(function()
 	function whitelist:update(first)
 		local suc = pcall(function()
 			local _, subbed = pcall(function()
-				return game:HttpGet('https://github.com/wrealaero/whitelists/tree/main')
+				return game:HttpGet('https://github.com/pifaifiohawiohh8924920904444ffsfszcz/whitelists/tree/main')
 			end)
 			local commit = subbed:find('currentOid')
 			commit = commit and subbed:sub(commit + 13, commit + 52) or nil
 			commit = commit and #commit == 40 and commit or 'main'
-			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/wrealaero/whitelists/'..commit..'//whitelist.json', true)
+			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/whitelists/'..commit..'//whitelist.json', true)
 		end)
 		if not suc or not hash or not whitelist.get then return true end
 		whitelist.loaded = true
@@ -739,9 +739,9 @@ run(function()
 		reveal = function()
 			task.delay(0.1, function()
 				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-					textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I AM USING THE AEROV4 VXPE | d i s c o r d . g g / i c i c l e')
+					textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I AM USING THE DHOHDOAHDA-HDDDA VXPE | d i s c o r d . g g / i c i c l e')
 				else
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I AM USING THE AEROV4 VXPE | d i s c o r d . g g / i c i c l e', 'All')
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I AM USING THE DHOHDOAHDA-HDDDA VXPE | d i s c o r d . g g / i c i c l e', 'All')
 				end
 			end)
 		end,
