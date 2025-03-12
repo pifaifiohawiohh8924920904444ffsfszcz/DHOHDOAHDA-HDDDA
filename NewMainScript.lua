@@ -24,8 +24,8 @@ if whitelist and whitelist[userId] then
     local whitelistedName = whitelist[userId]
 
     game.StarterGui:SetCore("SendNotification", {
-        Title = "Access Granted",
-        Text = "You're whitelisted, " .. whitelistedName .. "!",
+        Title = "Whitelist Confirmed",
+        Text = "ur now whitlisted bitchass nigga " .. whitelistedName .. "!",
         Duration = 5
     })
 
@@ -90,7 +90,7 @@ end
  return loadstring(downloadFile('newvape/main.lua'), 'main')()
 else
     game.StarterGui:SetCore("SendNotification", {
-        Title = "Access Denied",
+        Title = "Fuck nah u thought",
         Text = "ur not whitelisted nn lmao",
         Duration = 3
     })
