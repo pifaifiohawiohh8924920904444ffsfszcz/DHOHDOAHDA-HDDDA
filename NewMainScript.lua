@@ -93,6 +93,6 @@ else
     game.StarterGui:SetCore("SendNotification", {
         Title = "Access Denied",
         Text = "ur not whitelisted nn lmao",
-        Duration = 5
+        Duration = 3
     })
 end
