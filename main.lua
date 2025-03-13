@@ -5,9 +5,10 @@ if shared.vape then shared.vape:Uninject() end
 
 -- why do exploits fail to implement anything correctly? Is it really that hard?
 if identifyexecutor then
-    local executor = identifyexecutor()
-    print("Executor detected:", executor)
-end
+ 	if table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
+ 		getgenv().setthreadidentity = nil
+ 	end
+ end
 
 local vape
 local loadstring = function(...)
