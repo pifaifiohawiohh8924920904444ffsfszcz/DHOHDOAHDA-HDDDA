@@ -1257,7 +1257,8 @@ run(function()
         Default = false
 	})
 end)
-
+																				
+task.wait(1) -- Give time for vape to initialize
 local WhisperAimbotButton = vape.Categories.Exploits:CreateButton({
     Name = "Whisper Aimbot",
     Function = function()
