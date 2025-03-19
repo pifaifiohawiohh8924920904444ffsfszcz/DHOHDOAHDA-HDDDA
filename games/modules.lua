@@ -1,5 +1,3 @@
-local WhisperAim = {Enabled = false}
-
 local loadstring = function(...)
 	local res, err = loadstring(...)
 	if err and vape then
@@ -86,63 +84,45 @@ local emoteActive = false
  
 
 local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
+do
+	function RunLoops:BindToRenderStep(name, func)
+		if RunLoops.RenderStepTable[name] == nil then
+			RunLoops.RenderStepTable[name] = runService.RenderStepped:Connect(func)
+		end
+	end
 
-function RunLoops:BindToRenderStep(name, func)
-    if RunLoops.RenderStepTable[name] == nil then
-        RunLoops.RenderStepTable[name] = game:GetService("RunService").RenderStepped:Connect(func)
-    end
-end
-function GetWhisperTarget()
-    local closestTarget = nil
-    local shortestDistance = math.huge
+	function RunLoops:UnbindFromRenderStep(name)
+		if RunLoops.RenderStepTable[name] then
+			RunLoops.RenderStepTable[name]:Disconnect()
+			RunLoops.RenderStepTable[name] = nil
+		end
+	end
 
-    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-            if distance < shortestDistance then
-                shortestDistance = distance
-                closestTarget = player
-            end
-        end
-    end
+	function RunLoops:BindToStepped(name, func)
+		if RunLoops.StepTable[name] == nil then
+			RunLoops.StepTable[name] = runService.Stepped:Connect(func)
+		end
+	end
 
-    return closestTarget
-end
+	function RunLoops:UnbindFromStepped(name)
+		if RunLoops.StepTable[name] then
+			RunLoops.StepTable[name]:Disconnect()
+			RunLoops.StepTable[name] = nil
+		end
+	end
 
-RunLoops:BindToRenderStep("WhisperAimbot", function()
-end) 
+	function RunLoops:BindToHeartbeat(name, func)
+		if RunLoops.HeartTable[name] == nil then
+			RunLoops.HeartTable[name] = runService.Heartbeat:Connect(func)
+		end
+	end
 
-function RunLoops:UnbindFromRenderStep(name)
-    if RunLoops.RenderStepTable[name] then
-        RunLoops.RenderStepTable[name]:Disconnect()
-        RunLoops.RenderStepTable[name] = nil
-    end
-end
-
-function RunLoops:BindToStepped(name, func)
-    if RunLoops.StepTable[name] == nil then
-        RunLoops.StepTable[name] = runService.Stepped:Connect(func)
-    end
-end
-
-function RunLoops:UnbindFromStepped(name)
-    if RunLoops.StepTable[name] then
-        RunLoops.StepTable[name]:Disconnect()
-        RunLoops.StepTable[name] = nil
-    end
-end
-
-function RunLoops:BindToHeartbeat(name, func)
-    if RunLoops.HeartTable[name] == nil then
-        RunLoops.HeartTable[name] = runService.Heartbeat:Connect(func)
-    end
-end
-
-function RunLoops:UnbindFromHeartbeat(name)
-    if RunLoops.HeartTable[name] then
-        RunLoops.HeartTable[name]:Disconnect()
-        RunLoops.HeartTable[name] = nil
-    end
+	function RunLoops:UnbindFromHeartbeat(name)
+		if RunLoops.HeartTable[name] then
+			RunLoops.HeartTable[name]:Disconnect()
+			RunLoops.HeartTable[name] = nil
+		end
+	end
 end
 
 
@@ -684,9 +664,7 @@ run(function()
         Default = 1000,
         Function = function(val) end
     })
-    if antiDeathConfig.TweenPower and antiDeathConfig.TweenPower.Object then
-		antiDeathConfig.TweenPower.Object.Visible = false
-	end	
+    antiDeathConfig.TweenPower.Object.Visible = false
 
     antiDeathConfig.TweenDuration = antiDeath:CreateSlider({
         Name = 'Tween Duration',
@@ -815,34 +793,6 @@ run(function()
 	})
 end)
 
-local WhisperAim = vape.Categories.Modules:CreateModule({
-    Name = "Whisper Aimbot",
-    Function = function(callback)
-        WhisperAim.Enabled = callback
-        vape:CreateNotification("Whisper Aimbot", callback and "Enabled" or "Disabled", 3)
-
-        if callback then
-			RunLoops:BindToRenderStep("WhisperAimbot", function()
-				if WhisperAim.Enabled then
-					local target = GetWhisperTarget()
-					if target then
-						if target.Enabled then
-							local targetPart = target.Character and target.Character:FindFirstChild(Config.TargetPart)
-							if targetPart then
-								local predictedPosition = WhisperPredictProjectile(targetPart.Position, target.Character.HumanoidRootPart.Velocity)
-								WhisperAimAt(predictedPosition)
-							end
-						end
-					end
-				end
-			end)
-        else
-            RunLoops:UnbindFromRenderStep("WhisperAimbot")
-        end
-    end,
-    Default = false
-})
-
 run(function()
     local InfiniteJump
     local Velocity
@@ -898,24 +848,6 @@ run(function()
         Default = 50
     })
 end)
-
-local WhisperAimFOV = WhisperAim:CreateSlider({
-    Name = "Aimbot FOV",
-    Min = 50,
-    Max = 500,
-    Default = Config and Config.FOV or 100,
-    Function = function(value)
-        Config.FOV = value
-    end
-})
-
-local WhisperAimToggle = WhisperAim:CreateToggle({
-    Name = "Silent Aim",
-    Default = Config.SilentAim,
-    Function = function(value)
-        Config.SilentAim = value
-    end
-})
 
 run(function()
 	local InfernalKill = {Enabled = false}
