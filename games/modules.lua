@@ -109,7 +109,7 @@ function GetWhisperTarget()
     return closestTarget
 end
 
-RunLoops:BindToRenderStep("WhisperAimbot", function()
+RunLoops:BindToRenderStep"WhisperAimbot", function()
 
 	function RunLoops:UnbindFromRenderStep(name)
 		if RunLoops.RenderStepTable[name] then
@@ -812,7 +812,8 @@ run(function()
 		Max = 25
 	})
 end)
-														local WhisperAim = vape.Categories.Modules:CreateModule({
+
+local WhisperAim = vape.Categories.Modules:CreateModule({
     Name = "Whisper Aimbot",
     Function = function(callback)
         WhisperAim.Enabled = callback
