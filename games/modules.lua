@@ -84,29 +84,31 @@ local emoteActive = false
  
 
 local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
+
 do
 	function RunLoops:BindToRenderStep(name, func)
 		if RunLoops.RenderStepTable[name] == nil then
 			RunLoops.RenderStepTable[name] = runService.RenderStepped:Connect(func)
 		end
 	end
-
-	RunLoops:BindToRenderStep("WhisperAimbot", function()
-			
-if WhisperAim.Enabled then
-    local target = GetWhisperTarget() 
-    if target then 
-        if target.Enabled then 
-            local targetPart = target.Character and target.Character:FindFirstChild(Config.TargetPart)
-            if targetPart then
-                local predictedPosition = WhisperPredictProjectile(targetPart.Position, target.Character.HumanoidRootPart.Velocity)
-                WhisperAimAt(predictedPosition)
-            end
-        end
-    else
-        warn("GetWhisperTarget() returned nil!") 
-    end
 end
+
+RunLoops:BindToRenderStep("WhisperAimbot", function()
+	if WhisperAim.Enabled then
+		local target = GetWhisperTarget() 
+		if target then 
+			if target.Enabled then 
+				local targetPart = target.Character and target.Character:FindFirstChild(Config.TargetPart)
+				if targetPart then
+					local predictedPosition = WhisperPredictProjectile(targetPart.Position, target.Character.HumanoidRootPart.Velocity)
+					WhisperAimAt(predictedPosition)
+				end
+			end
+		else
+			warn("GetWhisperTarget() returned nil!")  -- Debugging log
+		end
+	end
+end)
 
 	function RunLoops:UnbindFromRenderStep(name)
 		if RunLoops.RenderStepTable[name] then
