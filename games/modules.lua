@@ -125,15 +125,6 @@ do
 	end
 end
 
-local function WhisperPredictProjectile(targetPosition, targetVelocity)
-    if not Config.PredictionEnabled then return targetPosition end
-    
-    local distance = (targetPosition - gameCamera.CFrame.Position).Magnitude
-    local timeToHit = distance / ProjectileSpeed
-    
-    return targetPosition + (targetVelocity * timeToHit * Config.PredictionFactor)
-end
-
 
 local XStore = {
 	bedtable = {},
@@ -425,37 +416,6 @@ local function GetTarget()
 		NPCs = false,
 		Wallcheck = false
 	})
-end
-
-local function GetWhisperTarget()
-    local closestPlayer = nil
-    local shortestDistance = Config.FOV
-    
-    for _, player in pairs(playersService:GetPlayers()) do
-        if player ~= lplr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
-           player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-           
-            if Config.TeamCheck and player.Team == lplr.Team then continue end
-            
-            local targetPart = player.Character:FindFirstChild(Config.TargetPart)
-            if not targetPart then continue end
-            
-            local screenPoint = gameCamera:WorldToScreenPoint(targetPart.Position)
-            local screenDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-            
-            if screenDistance < shortestDistance then
-                local ray = Ray.new(gameCamera.CFrame.Position, (targetPart.Position - gameCamera.CFrame.Position).Unit * Config.MaxDistance)
-                local hit, position = workspace:FindPartOnRayWithIgnoreList(ray, {lplr.Character, player.Character})
-                
-                if hit and hit:IsDescendantOf(player.Character) or not hit then
-                    closestPlayer = player
-                    shortestDistance = screenDistance
-                end
-            end
-        end
-    end
-    
-    return closestPlayer
 end
 
 local GodMode = {Enabled = false}
@@ -1035,32 +995,6 @@ end)
 -- 	})
 -- end)
 
-local oldNamecall
-if not oldNamecall then
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local args = {...}
-        local method = getnamecallmethod()
-
-        if whisperAimbot and whisperAimbot.Enabled and method == "FireServer" and Config.SilentAim and AimbotTarget and math.random(1, 100) <= Config.HitChance then
-            local functionName = self.Name
-            
-            if functionName:find("projectile") or functionName:find("arrow") or functionName:find("bow") or functionName:find("throw") then
-                local targetPart = AimbotTarget.Character:FindFirstChild(Config.TargetPart)
-                if targetPart then
-                    local targetVelocity = AimbotTarget.Character.HumanoidRootPart.Velocity
-                    local predictedPosition = WhisperPredictProjectile(targetPart.Position, targetVelocity)
-
-                    if #args >= 2 and typeof(args[2]) == "Vector3" then
-                        args[2] = (predictedPosition - gameCamera.CFrame.Position).Unit
-                    end
-                end
-            end
-        end
-
-        return oldNamecall(self, unpack(args))
-    end)
-end
-
 run(function()
     local NightmareEventButton
     NightmareEventButton = vape.Categories.Modules:CreateModule({
@@ -1211,35 +1145,6 @@ run(function()
 end)
 
 run(function()
-    local whisperAimbot
-    whisperAimbot = vape.Categories.Modules:CreateModule({
-        Name = "Whisper Aimbot",
-        Function = function(callback)
-            whisperAimbot.Enabled = callback
-            ShowNotification("Whisper Aimbot " .. (callback and "Enabled" or "Disabled"))
-
-            if callback then
-                RunLoops:BindToRenderStep("WhisperAimbot", function()
-                    local target = GetWhisperTarget()
-                    if target then
-                        local targetPart = target.Character:FindFirstChild(Config.TargetPart)
-                        if targetPart then
-                            local targetVelocity = target.Character.HumanoidRootPart.Velocity
-                            local predictedPosition = WhisperPredictProjectile(targetPart.Position, targetVelocity)
-
-                            WhisperAimAt(predictedPosition)
-                        end
-                    end
-                end)
-            else
-                RunLoops:UnbindFromRenderStep("WhisperAimbot")
-            end
-        end,
-        Default = false
-    })
-end)
-
-run(function()
 	local NoNameTag
 	NoNameTag = vape.Categories.Modules:CreateModule({
 		PerformanceModeBlacklisted = true,
@@ -1257,15 +1162,6 @@ run(function()
         Default = false
 	})
 end)
-																				
-task.wait(1) -- Give time for vape to initialize
-local WhisperAimbotButton = vape.Categories.Exploits:CreateButton({
-    Name = "Whisper Aimbot",
-    Function = function()
-        whisperAimbot.Function(not whisperAimbot.Enabled)
-    end,
-    Default = false
-})
 
 run(function()
 	local DamageIndicator = {}
