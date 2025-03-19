@@ -91,6 +91,19 @@ do
 		end
 	end
 
+	RunLoops:BindToRenderStep("WhisperAimbot", function()
+    if WhisperAim.Enabled then
+        local target = GetWhisperTarget()
+        if target then
+            local targetPart = target.Character:FindFirstChild(Config.TargetPart)
+            if targetPart then
+                local predictedPosition = WhisperPredictProjectile(targetPart.Position, target.Character.HumanoidRootPart.Velocity)
+                WhisperAimAt(predictedPosition)
+            end
+        end
+    end
+end)
+
 	function RunLoops:UnbindFromRenderStep(name)
 		if RunLoops.RenderStepTable[name] then
 			RunLoops.RenderStepTable[name]:Disconnect()
@@ -792,6 +805,31 @@ run(function()
 		Max = 25
 	})
 end)
+														local WhisperAim = vape.Categories.Modules:CreateModule({
+    Name = "Whisper Aimbot",
+    Function = function(callback)
+        WhisperAim.Enabled = callback
+        vape:CreateNotification("Whisper Aimbot", callback and "Enabled" or "Disabled", 3)
+
+        if callback then
+            RunLoops:BindToRenderStep("WhisperAimbot", function()
+                local target = GetWhisperTarget()
+                if target then
+                    local targetPart = target.Character:FindFirstChild(Config.TargetPart)
+                    if targetPart then
+                        local targetVelocity = target.Character.HumanoidRootPart.Velocity
+                        local predictedPosition = WhisperPredictProjectile(targetPart.Position, targetVelocity)
+
+                        WhisperAimAt(predictedPosition)
+                    end
+                end
+            end)
+        else
+            RunLoops:UnbindFromRenderStep("WhisperAimbot")
+        end
+    end,
+    Default = false
+})
 
 run(function()
     local InfiniteJump
@@ -848,6 +886,23 @@ run(function()
         Default = 50
     })
 end)
+																local WhisperAimFOV = WhisperAim:CreateSlider({
+    Name = "Aimbot FOV",
+    Min = 50,
+    Max = 500,
+    Default = Config.FOV,
+    Function = function(value)
+        Config.FOV = value
+    end
+})
+
+local WhisperAimToggle = WhisperAim:CreateToggle({
+    Name = "Silent Aim",
+    Default = Config.SilentAim,
+    Function = function(value)
+        Config.SilentAim = value
+    end
+})
 
 run(function()
 	local InfernalKill = {Enabled = false}
