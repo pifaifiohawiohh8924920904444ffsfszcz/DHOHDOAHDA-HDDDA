@@ -92,17 +92,21 @@ do
 	end
 
 	RunLoops:BindToRenderStep("WhisperAimbot", function()
-    if WhisperAim.Enabled then
-        local target = GetWhisperTarget()
-        if target then
-            local targetPart = target.Character:FindFirstChild(Config.TargetPart)
+			
+if WhisperAim.Enabled then
+    local target = GetWhisperTarget() 
+    if target then 
+        if target.Enabled then 
+            local targetPart = target.Character and target.Character:FindFirstChild(Config.TargetPart)
             if targetPart then
                 local predictedPosition = WhisperPredictProjectile(targetPart.Position, target.Character.HumanoidRootPart.Velocity)
                 WhisperAimAt(predictedPosition)
             end
         end
+    else
+        warn("GetWhisperTarget() returned nil!") 
     end
-end)
+end
 
 	function RunLoops:UnbindFromRenderStep(name)
 		if RunLoops.RenderStepTable[name] then
