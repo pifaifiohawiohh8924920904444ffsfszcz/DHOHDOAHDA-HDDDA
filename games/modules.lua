@@ -684,7 +684,9 @@ run(function()
         Default = 1000,
         Function = function(val) end
     })
-    antiDeathConfig.TweenPower.Object.Visible = false
+    if antiDeathConfig.TweenPower and antiDeathConfig.TweenPower.Object then
+		antiDeathConfig.TweenPower.Object.Visible = false
+	end	
 
     antiDeathConfig.TweenDuration = antiDeath:CreateSlider({
         Name = 'Tween Duration',
@@ -896,11 +898,12 @@ run(function()
         Default = 50
     })
 end)
-																local WhisperAimFOV = WhisperAim:CreateSlider({
+
+local WhisperAimFOV = WhisperAim:CreateSlider({
     Name = "Aimbot FOV",
     Min = 50,
     Max = 500,
-    Default = Config.FOV,
+    Default = Config and Config.FOV or 100,
     Function = function(value)
         Config.FOV = value
     end
