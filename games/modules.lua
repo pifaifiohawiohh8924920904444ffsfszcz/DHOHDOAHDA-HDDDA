@@ -1009,6 +1009,112 @@ run(function()
     })
 end)
 
+local function GetWhisperTarget()
+    local closestPlayer = nil
+    local shortestDistance = Config.FOV
+    
+    for _, player in pairs(playersService:GetPlayers()) do
+        if player ~= lplr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
+           player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+           
+            if Config.TeamCheck and player.Team == lplr.Team then continue end
+            
+            local targetPart = player.Character:FindFirstChild(Config.TargetPart)
+            if not targetPart then continue end
+            
+            local screenPoint = gameCamera:WorldToScreenPoint(targetPart.Position)
+            local screenDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+            
+            if screenDistance < shortestDistance then
+                local ray = Ray.new(gameCamera.CFrame.Position, (targetPart.Position - gameCamera.CFrame.Position).Unit * Config.MaxDistance)
+                local hit, position = workspace:FindPartOnRayWithIgnoreList(ray, {lplr.Character, player.Character})
+                
+                if hit and hit:IsDescendantOf(player.Character) or not hit then
+                    closestPlayer = player
+                    shortestDistance = screenDistance
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+local function WhisperPredictProjectile(targetPosition, targetVelocity)
+    if not Config.PredictionEnabled then return targetPosition end
+    
+    local distance = (targetPosition - gameCamera.CFrame.Position).Magnitude
+    local timeToHit = distance / ProjectileSpeed
+    
+    return targetPosition + (targetVelocity * timeToHit * Config.PredictionFactor)
+end
+
+local function WhisperAimAt(position)
+    if not Config.AimbotEnabled or not position then return end
+    local aimCFrame = CFrame.new(gameCamera.CFrame.Position, position)
+    
+    if not Config.SilentAim then
+        gameCamera.CFrame = gameCamera.CFrame:Lerp(aimCFrame, 0.2)
+    end
+    
+    return aimCFrame
+end
+																
+Config.UseWhisperAimbot = false -- Default to using your aimbot
+
+local WhisperAimbotToggle = vape.Categories.Modules:CreateModule({
+    Name = "Whisper Aimbot",
+    Function = function(callback)
+        Config.UseWhisperAimbot = callback
+        ShowNotification("Whisper Aimbot " .. (callback and "Enabled" or "Disabled"))
+    end,
+    Default = false
+})
+
+RunLoops:BindToRenderStep("Aimbot", function()
+    local target = Config.UseWhisperAimbot and GetWhisperTarget() or GetTarget()
+
+    if target then
+        local targetPart = target.Character:FindFirstChild(Config.TargetPart)
+        if targetPart then
+            local targetVelocity = target.Character.HumanoidRootPart.Velocity
+            local predictedPosition = Config.UseWhisperAimbot and WhisperPredictProjectile(targetPart.Position, targetVelocity) or 
+                                      prediction:Predict(targetPart.Position, targetVelocity, ProjectileSpeed, Config.PredictionFactor)
+
+            if Config.UseWhisperAimbot then
+                WhisperAimAt(predictedPosition)
+            else
+                AimAt(predictedPosition)
+            end
+        end
+    end
+end)
+
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+
+    if method == "FireServer" and Config.AimbotEnabled and Config.SilentAim and AimbotTarget and math.random(1, 100) <= Config.HitChance then
+        local functionName = self.Name
+        
+        if functionName:find("projectile") or functionName:find("arrow") or functionName:find("bow") or functionName:find("throw") then
+            local targetPart = AimbotTarget.Character:FindFirstChild(Config.TargetPart)
+            if targetPart then
+                local targetVelocity = AimbotTarget.Character.HumanoidRootPart.Velocity
+                local predictedPosition = Config.UseWhisperAimbot and WhisperPredictProjectile(targetPart.Position, targetVelocity) or 
+                                          prediction:Predict(targetPart.Position, targetVelocity, ProjectileSpeed, Config.PredictionFactor)
+
+                if #args >= 2 and typeof(args[2]) == "Vector3" then
+                    args[2] = (predictedPosition - gameCamera.CFrame.Position).Unit
+                end
+            end
+        end
+    end
+
+    return oldNamecall(self, unpack(args))
+end)																	
+																
 run(function()
     local AdetundeExploit
     local AdetundeExploit_List
