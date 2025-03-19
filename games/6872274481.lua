@@ -1909,8 +1909,8 @@ run(function()
 	Value = Fly:CreateSlider({
 		Name = 'Speed',
 		Min = 1,
-		Max = 23,
-		Default = 23,
+		Max = 24,
+		Default = 24,
 		Suffix = function(val)
 			return val == 1 and 'stud' or 'studs'
 		end
@@ -3079,81 +3079,127 @@ end)
 	
 run(function()
 	local NoFall = {Enabled = false}
-	local SafeRange = {Value = 20}
-	local VelocityThreshold = {Value = 30}
-	local CoreConnection = {Disconnect = function() end}
+	local clone, oldroot
+	local proper = true
 
-	local collectionService = game:GetService("CollectionService")
-
-	local blockRaycast = RaycastParams.new()
-	blockRaycast.FilterType = Enum.RaycastFilterType.Include
-
-	local blocks = collectionService:GetTagged("block")
-	blockRaycast.FilterDescendantsInstances = {blocks}
-	vape:Clean(collectionService:GetInstanceAddedSignal("block"):Connect(function(block)
-		table.insert(blocks, block)
-		blockRaycast.FilterDescendantsInstances = {blocks}
-	end))
-	vape:Clean(collectionService:GetInstanceRemovedSignal("block"):Connect(function(block)
-		block = table.find(blocks, block)
-		if block then
-			table.remove(blocks, block)
-			blockRaycast.FilterDescendantsInstances = {blocks}
+	local function doClone()
+		if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
+			hip = entitylib.character.Humanoid.HipHeight
+			oldroot = entitylib.character.HumanoidRootPart
+			if not lplr.Character.Parent then
+				return false
+			end
+	
+			lplr.Character.Parent = game
+			clone = oldroot:Clone()
+			clone.Parent = lplr.Character
+			oldroot.Parent = gameCamera
+			clone.CFrame = oldroot.CFrame
+	
+			lplr.Character.PrimaryPart = clone
+			entitylib.character.HumanoidRootPart = clone
+			entitylib.character.RootPart = clone
+			lplr.Character.Parent = workspace
+	
+			for _, v in lplr.Character:GetDescendants() do
+				if v:IsA('Weld') or v:IsA('Motor6D') then
+					if v.Part0 == oldroot then
+						v.Part0 = clone
+					end
+					if v.Part1 == oldroot then
+						v.Part1 = clone
+					end
+				end
+			end
+	
+			return true
 		end
-	end))
+	
+		return false
+	end
+	
+	local function revertClone()
+		if not oldroot or not oldroot:IsDescendantOf(workspace) or not entitylib.isAlive then
+			return false
+		end
+	
+		lplr.Character.Parent = game
+		oldroot.Parent = lplr.Character
+		lplr.Character.PrimaryPart = oldroot
+		entitylib.character.HumanoidRootPart = oldroot
+		entitylib.character.RootPart = oldroot
+		lplr.Character.Parent = workspace
+		oldroot.CanCollide = true
+	
+		for _, v in lplr.Character:GetDescendants() do
+			if v:IsA('Weld') or v:IsA('Motor6D') then
+				if v.Part0 == clone then
+					v.Part0 = oldroot
+				end
+				if v.Part1 == clone then
+					v.Part1 = oldroot
+				end
+			end
+		end
+	
+		local oldpos = clone.CFrame
+		if clone then
+			clone:Destroy()
+			clone = nil
+		end
+	
+		oldroot.CFrame = oldpos
+		oldroot = nil
+		entitylib.character.Humanoid.HipHeight = hip or 2
+	end
 
 	NoFall = vape.Categories.Blatant:CreateModule({
-		Name = "NoFall",
-		Function = function(callback)
+		["Name"] = 'NoFall',
+		["Function"] = function(callback)
 			if callback then
-				task.spawn(function()
-					pcall(function() 
-						game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("TridentUnanchor"):Destroy()
-					end)
-				end)
-
-				local safeRange = SafeRange.Value
-				local velocityThreshold = -VelocityThreshold.Value
-				
-				NoFall:Clean(game:GetService("RunService").Heartbeat:Connect(function()
-					if not entitylib.isAlive or XStore.AntiHitting then return end
-					if LongJump.Enabled then return end
-					local humanoid = entitylib.character.Humanoid
-					local rootPart = entitylib.character.HumanoidRootPart
-					if humanoid:GetState() == Enum.HumanoidStateType.Freefall and rootPart.Velocity.Y < velocityThreshold then
-						local ray = workspace:Raycast(rootPart.Position, Vector3.new(0, -1000, 0), blockRaycast)
-						if ray then
-							local distance = rootPart.Position.Y - ray.Position.Y
-							if distance > safeRange then
-								local newPosition = Vector3.new(
-									rootPart.Position.X,
-									ray.Position.Y + 0.1,
-									rootPart.Position.Z
-								)
-								rootPart.CFrame = CFrame.new(newPosition) * rootPart.CFrame.Rotation
-							end
+				if not proper then
+					NoFall:Toggle()
+					return
+				end
+	
+				success = doClone()
+				if not success then
+					NoFall:Toggle()
+					return
+				end
+				NoFall:Clean(runService.PreSimulation:Connect(function(dt)
+					if entitylib.isAlive and oldroot then
+						local root = entitylib.character.RootPart
+						if not isnetworkowner(oldroot) then
+							root.CFrame = oldroot.CFrame
+							root.Velocity = oldroot.Velocity
+							return
 						end
+						oldroot.CFrame = root.CFrame
+						oldroot.Velocity = vector.zero
+						oldroot.CanCollide = false
 					end
-				end))			
+				end))
+				NoFall:Clean(entitylib.Events.LocalAdded:Connect(function(char)
+					if NoFall.Enabled then
+						oldroot = nil
+						NoFall:Toggle()
+						NoFall:Toggle()
+					end
+				end))
+			else
+				if success and clone and oldroot and proper then
+					proper = true
+					if oldroot and clone then
+						revertClone()
+					end
+				end
 			end
 		end,
-		HoverText = "Prevents taking fall damage."
-	})
-	SafeRange = NoFall:CreateSlider({
-		Name = "SafeRange",
-		Function = function() end,
-		Min = 10, 
-		Max = 30,
-		Default = 20
-	})
-	VelocityThreshold = NoFall:CreateSlider({
-		Name = "VelocityThreshold",
-		Function = function() end,
-		Min = 20, 
-		Max = 50,
-		Default = 30
+		Tooltip = 'Prevents taking fall damage.'
 	})
 end)
+
 run(function()
 	local old
 	
@@ -3448,8 +3494,8 @@ run(function()
 	Value = Speed:CreateSlider({
 		Name = 'Speed',
 		Min = 1,
-		Max = 23,
-		Default = 23,
+		Max = 24,
+		Default = 24,
 		Suffix = function(val)
 			return val == 1 and 'stud' or 'studs'
 		end
