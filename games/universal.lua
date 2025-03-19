@@ -640,37 +640,48 @@ run(function()
 				entitylib.refresh()
 			end
 
-			if whitelist.textdata ~= whitelist.olddata then
-				whitelist.olddata = whitelist.textdata
+if whitelist.textdata ~= whitelist.olddata then
+    whitelist.olddata = whitelist.textdata
 
-				local suc, res = pcall(function()
-					return httpService:JSONDecode(whitelist.textdata)
-				end)
-	
-				whitelist.data = suc and type(res) == 'table' and res or whitelist.data
-				whitelist.localprio = whitelist:get(lplr)
+    local suc, res = pcall(function()
+        return httpService:JSONDecode(whitelist.textdata)
+    end)
 
-				pcall(function()
-					writefile('newvape/profiles/whitelist.json', whitelist.textdata)
-				end)
-			end
+    whitelist.data = suc and type(res) == 'table' and res or whitelist.data
+    whitelist.localprio = whitelist:get(lplr)
 
-			if whitelist.data.Announcement.expiretime > os.time() then
-				local targets = whitelist.data.Announcement.targets
-				targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',')
+    pcall(function()
+        writefile('newvape/profiles/whitelist.json', whitelist.textdata)
+    end)
+end
 
-				if table.find(targets, tostring(lplr.UserId)) then
-					local hint = Instance.new('Hint')
-					hint.Text = 'VAPE ANNOUNCEMENT: '..whitelist.data.Announcement.text
-					hint.Parent = workspace
-					game:GetService('Debris'):AddItem(hint, 20)
-				end
-			end
+-- Ensure Announcement exists to prevent nil errors
+if not whitelist.data.Announcement then
+    whitelist.data.Announcement = {expiretime = 0, text = "No announcement", targets = {}}
+end
 
-			if whitelist.data.KillVape then
-				vape:Uninject()
-				return true
-			end
+if whitelist.data.Announcement.expiretime > os.time() then
+    local targets = whitelist.data.Announcement.targets
+    targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',')
+
+    if table.find(targets, tostring(lplr.UserId)) then
+        local hint = Instance.new('Hint')
+        hint.Text = 'VAPE ANNOUNCEMENT: '..whitelist.data.Announcement.text
+        hint.Parent = workspace
+        game:GetService('Debris'):AddItem(hint, 20)
+    end
+end
+
+if whitelist.data.KillVape then
+    vape:Uninject()
+    return true
+end
+
+if whitelist.data.KillVape then
+    vape:Uninject()
+    return true
+end
+
 
 			if whitelist.data.BlacklistedUsers[tostring(lplr.UserId)] then
 				task.spawn(lplr.kick, lplr, whitelist.data.BlacklistedUsers[tostring(lplr.UserId)])
