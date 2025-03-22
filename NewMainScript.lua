@@ -1,4 +1,4 @@
-local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistcheck/main/whitelist.json"
+local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistcheck/refs/heads/main/whitelist.json"
 local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
