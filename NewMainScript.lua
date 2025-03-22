@@ -21,9 +21,10 @@ end
 
 local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
-
     local isfile = isfile or function(file)
-        local suc, res = pcall(function() return readfile(file) end)
+        local suc, res = pcall(function()
+            return readfile(file)
+        end)
         return suc and res ~= nil and res ~= ''
     end
     local delfile = delfile or function(file)
@@ -33,13 +34,13 @@ if whitelist and whitelist[userId] then
     local function downloadFile(path, func)
         if not isfile(path) then
             local suc, res = pcall(function()
-                return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/' .. readfile('newvape/profiles/commit.txt') .. '/' .. select(1, path:gsub('newvape/', '')), true)
+                return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
             end)
             if not suc or res == '404: Not Found' then
                 error(res)
             end
             if path:find('.lua') then
-                res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n' .. res
+                res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
             end
             writefile(path, res)
         end
@@ -80,10 +81,9 @@ if whitelist and whitelist[userId] then
 
     return loadstring(downloadFile('newvape/main.lua'), 'main')()
 else
-
     game.StarterGui:SetCore("SendNotification", {
-        Title = "Fuck nah u thought",
-        Text = "ur not whitelisted nn lmao",
+        Title = "Access Denied",
+        Text = "You are not whitelisted!",
         Duration = 2
     })
 end
