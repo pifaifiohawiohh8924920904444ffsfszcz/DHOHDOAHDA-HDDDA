@@ -2043,6 +2043,7 @@ run(function()
 		if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
 			hip = entitylib.character.Humanoid.HipHeight
 			getgenv().oldroot = entitylib.character.HumanoidRootPart
+			bedwars.QueryUtil:setQueryIgnored(getgenv().oldroot, true)																				
 			if not lplr.Character.Parent then return false end
 			lplr.Character.Parent = game
 			clone = getgenv().oldroot:Clone()
