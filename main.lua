@@ -1,5 +1,4 @@
 --This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
 
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
@@ -56,29 +55,35 @@ local function finishLoading()
 			task.wait(10)
 		until not vape.Loaded
 	end)
-end
 
-local teleportedServers
-vape:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
-	if (not teleportedServers) and (not shared.VapeIndependent) then
-		teleportedServers = true
-		local teleportScript = [[
-			shared.vapereload = true
+	local teleportedServers
+	vape:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
+		if (not teleportedServers) and (not shared.VapeIndependent) then
+			teleportedServers = true
+			local teleportScript = [[
+				shared.vapereload = true
+				if shared.VapeDeveloper then
+					loadstring(readfile('newvape/loader.lua'), 'loader')()
+				else
+					loadstring(game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
+				end
+			]]
 			if shared.VapeDeveloper then
-				loadstring(readfile('newvape/loader.lua'), 'loader')()
-			else
-				loadstring(game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
+				teleportScript = 'shared.VapeDeveloper = true\n'..teleportScript
 			end
-		]]
-		vape:Save()
-		queue_on_teleport(teleportScript)
-	end
-end))
+			if shared.VapeCustomProfile then
+				teleportScript = 'shared.VapeCustomProfile = "'..shared.VapeCustomProfile..'"\n'..teleportScript
+			end
+			vape:Save()
+			queue_on_teleport(teleportScript)
+		end
+	end))
 
-if not shared.vapereload then
-	if not vape.Categories then return end
-	if vape.Categories.Main.Options['GUI bind indicator'].Enabled then
-		vape:CreateNotification('Finished Loading', vape.VapeButton and 'Press the button in the top right to open GUI' or 'Press '..table.concat(vape.Keybind, ' + '):upper()..' to open GUI', 5)
+	if not shared.vapereload then
+		if not vape.Categories then return end
+		if vape.Categories.Main.Options['GUI bind indicator'].Enabled then
+			vape:CreateNotification('Finished Loading', vape.VapeButton and 'Press the button in the top right to open GUI' or 'Press '..table.concat(vape.Keybind, ' + '):upper()..' to open GUI', 5)
+		end
 	end
 end
 
@@ -101,9 +106,9 @@ local PerformanceModule = loadstring(downloadFile('newvape/libraries/performance
 XFunctions:SetGlobalData('Performance', PerformanceModule)
 
 local utils_functions = loadstring(downloadFile('newvape/libraries/utils.lua'), 'Utils')()
-for i, v in utils_functions do
-	getfenv()[i] = v
-end
+for i: (any), v: (...any) -> (...any) in utils_functions do --> sideloads all render global utility functions from libraries/utils.lua
+    getfenv()[i] = v;
+end;
 
 getgenv().InfoNotification = function(title, msg, dur)
 	warn('info', tostring(title), tostring(msg), tostring(dur))
