@@ -65,6 +65,22 @@ local contextService = cloneref(game:GetService('ContextActionService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
 local collectionService = cloneref(game:GetService("CollectionService"))
 
+local Config = {
+    AimbotEnabled = true,
+    SilentAim = false,
+    PredictionEnabled = true,
+    PredictionFactor = 0.165,
+    HitChance = 85,
+    FOV = 250,
+    ShowFOV = true, -- Make sure this is here for FOV visibility
+    TargetPart = "HumanoidRootPart",
+    MaxDistance = 150,
+    TeamCheck = true,
+    ESPEnabled = true, -- ESP is being kept
+    ESPColor = Color3.fromRGB(255, 0, 0),
+    ESPTransparency = 0.5
+}
+
 local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
 	return true
 end
