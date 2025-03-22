@@ -270,6 +270,26 @@ local function FindItemDrop(item)
 	return itemdist
 end
 
+local function loadWhisperAimbot()
+    RunService.RenderStepped:Connect(function()
+        if Config.AimbotEnabled then
+            AimbotTarget = GetClosestPlayerToCursor()
+            if AimbotTarget and AimbotActive then
+                local targetPart = AimbotTarget.Character:FindFirstChild(Config.TargetPart)
+                if targetPart then
+                    local targetVelocity = AimbotTarget.Character.HumanoidRootPart.Velocity
+                    local predictedPosition = PredictProjectile(targetPart.Position, targetVelocity)
+                    AimAt(predictedPosition)
+                end
+            end
+        end
+    end)
+end
+
+local function disableWhisperAimbot()
+    AimbotActive = false
+end
+
 local function getItem(itemName, inv)
 	for slot, item in (inv or store.inventory.inventory.items) do
 		if item.itemType == itemName then
@@ -496,6 +516,68 @@ run(function()
 		end,
 		["Description"] = "Ember Exploit"
 	})
+end)
+	
+run(function()
+    local WhisperAimbot = {Enabled = false}
+
+    WhisperAimbot = vape.Categories.Modules:CreateModule({
+        Name = "WhisperAimbot",
+        Function = function(callback)
+            if callback then
+                loadWhisperAimbot()
+            else
+                disableWhisperAimbot()
+            end
+        end,
+        Description = "Enhanced Whisper Kit Aimbot with prediction and customization"
+    })
+
+    local FOVSlider = WhisperAimbot:CreateSlider({
+        Name = "FOV",
+        Min = 50,
+        Max = 500,
+        Default = 250,
+        Function = function(value)
+            Config.FOV = value
+        end
+    })
+
+    local PredictionSlider = WhisperAimbot:CreateSlider({
+        Name = "Prediction",
+        Min = 0,
+        Max = 300,
+        Default = 165,
+        Function = function(value)
+            Config.PredictionFactor = value / 1000
+        end
+    })
+
+    local HitChanceSlider = WhisperAimbot:CreateSlider({
+        Name = "Hit Chance",
+        Min = 0,
+        Max = 100,
+        Default = 85,
+        Function = function(value)
+            Config.HitChance = value
+        end
+    })
+
+    local SilentAimToggle = WhisperAimbot:CreateToggle({
+        Name = "Silent Aim",
+        Function = function(value)
+            Config.SilentAim = value
+        end,
+        Default = false
+    })
+
+    local PredictionToggle = WhisperAimbot:CreateToggle({
+        Name = "Prediction",
+        Function = function(value)
+            Config.PredictionEnabled = value
+        end,
+        Default = true
+    })
 end)
 
 run(function()
