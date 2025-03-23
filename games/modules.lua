@@ -65,6 +65,22 @@ local contextService = cloneref(game:GetService('ContextActionService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
 local collectionService = cloneref(game:GetService("CollectionService"))
 
+local Config = {
+    AimbotEnabled = true,
+    SilentAim = false,
+    PredictionEnabled = true,
+    PredictionFactor = 0.165,
+    HitChance = 85,
+    FOV = 250,
+    ShowFOV = true, -- Make sure this is here for FOV visibility
+    TargetPart = "HumanoidRootPart",
+    MaxDistance = 150,
+    TeamCheck = true,
+    ESPEnabled = true, -- ESP is being kept
+    ESPColor = Color3.fromRGB(255, 0, 0),
+    ESPTransparency = 0.5
+}
+
 local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
 	return true
 end
@@ -268,6 +284,26 @@ local function FindItemDrop(item)
 		end
 	end
 	return itemdist
+end
+
+local function loadWhisperAimbot()
+    RunService.RenderStepped:Connect(function()
+        if Config.AimbotEnabled then
+            AimbotTarget = GetClosestPlayerToCursor()
+            if AimbotTarget and AimbotActive then
+                local targetPart = AimbotTarget.Character:FindFirstChild(Config.TargetPart)
+                if targetPart then
+                    local targetVelocity = AimbotTarget.Character.HumanoidRootPart.Velocity
+                    local predictedPosition = PredictProjectile(targetPart.Position, targetVelocity)
+                    AimAt(predictedPosition)
+                end
+            end
+        end
+    end)
+end
+
+local function disableWhisperAimbot()
+    AimbotActive = false
 end
 
 local function getItem(itemName, inv)
@@ -496,6 +532,68 @@ run(function()
 		end,
 		["Description"] = "Ember Exploit"
 	})
+end)
+	
+run(function()
+    local WhisperAimbot = {Enabled = false}
+
+    WhisperAimbot = vape.Categories.Modules:CreateModule({
+        Name = "WhisperAimbot",
+        Function = function(callback)
+            if callback then
+                loadWhisperAimbot()
+            else
+                disableWhisperAimbot()
+            end
+        end,
+        Description = "Enhanced Whisper Kit Aimbot with prediction and customization"
+    })
+
+    local FOVSlider = WhisperAimbot:CreateSlider({
+        Name = "FOV",
+        Min = 50,
+        Max = 500,
+        Default = 250,
+        Function = function(value)
+            Config.FOV = value
+        end
+    })
+
+    local PredictionSlider = WhisperAimbot:CreateSlider({
+        Name = "Prediction",
+        Min = 0,
+        Max = 300,
+        Default = 165,
+        Function = function(value)
+            Config.PredictionFactor = value / 1000
+        end
+    })
+
+    local HitChanceSlider = WhisperAimbot:CreateSlider({
+        Name = "Hit Chance",
+        Min = 0,
+        Max = 100,
+        Default = 85,
+        Function = function(value)
+            Config.HitChance = value
+        end
+    })
+
+    local SilentAimToggle = WhisperAimbot:CreateToggle({
+        Name = "Silent Aim",
+        Function = function(value)
+            Config.SilentAim = value
+        end,
+        Default = false
+    })
+
+    local PredictionToggle = WhisperAimbot:CreateToggle({
+        Name = "Prediction",
+        Function = function(value)
+            Config.PredictionEnabled = value
+        end,
+        Default = true
+    })
 end)
 
 run(function()
