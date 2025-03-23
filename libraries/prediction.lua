@@ -91,132 +91,128 @@ local function solveCubic(c0, c1, c2, c3)
 end
 
 function module.solveQuartic(c0, c1, c2, c3, c4)
-    local s0, s1, s2, s3
+	local s0, s1, s2, s3
 
-    local coeffs = {}
-    local z, u, v, sub
-    local A, B, C, D
-    local sq_A, p, q, r
-    local num
+	local coeffs = {}
+	local z, u, v, sub
+	local A, B, C, D
+	local sq_A, p, q, r
+	local num
 
-    A = c1 / c0
-    B = c2 / c0
-    C = c3 / c0
-    D = c4 / c0
+	A = c1 / c0
+	B = c2 / c0
+	C = c3 / c0
+	D = c4 / c0
 
-    sq_A = A * A
-    p = -0.375 * sq_A + B
-    q = 0.125 * sq_A * A - 0.5 * A * B + C
-    r = -(3 / 256) * sq_A * sq_A + 0.0625 * sq_A * B - 0.25 * A * C + D
+	sq_A = A * A
+	p = -0.375 * sq_A + B
+	q = 0.125 * sq_A * A - 0.5 * A * B + C
+	r = -(3 / 256) * sq_A * sq_A + 0.0625 * sq_A * B - 0.25 * A * C + D
 
-    if isZero(r) then
-        coeffs[3] = q
-        coeffs[2] = p
-        coeffs[1] = 0
-        coeffs[0] = 1
+	if isZero(r) then
+		coeffs[3] = q
+		coeffs[2] = p
+		coeffs[1] = 0
+		coeffs[0] = 1
 
-        local results = {solveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])}
-        num = #results
-        s0, s1, s2 = results[1], results[2], results[3]
-    else
-        coeffs[3] = 0.5 * r * p - 0.125 * q * q
-        coeffs[2] = -r
-        coeffs[1] = -0.5 * p
-        coeffs[0] = 1
+		local results = {solveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])}
+		num = #results
+		s0, s1, s2 = results[1], results[2], results[3]
+	else
+		coeffs[3] = 0.5 * r * p - 0.125 * q * q
+		coeffs[2] = -r
+		coeffs[1] = -0.5 * p
+		coeffs[0] = 1
 
-        s0, s1, s2 = solveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
-        z = s0
+		s0, s1, s2 = solveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
+		z = s0
 
-        u = z * z - r
-        v = 2 * z - p
+		u = z * z - r
+		v = 2 * z - p
 
-        if isZero(u) then
-            u = 0
-        elseif (u > 0) then
-            u = math.sqrt(u)
-        else
-            return
-        end
-        if isZero(v) then
-            v = 0
-        elseif (v > 0) then
-            v = math.sqrt(v)
-        else
-            return
-        end
+		if isZero(u) then
+			u = 0
+		elseif (u > 0) then
+			u = math.sqrt(u)
+		else
+			return
+		end
+		if isZero(v) then
+			v = 0
+		elseif (v > 0) then
+			v = math.sqrt(v)
+		else
+			return
+		end
 
-        coeffs[2] = z - u
-        coeffs[1] = q < 0 and -v or v
-        coeffs[0] = 1
+		coeffs[2] = z - u
+		coeffs[1] = q < 0 and -v or v
+		coeffs[0] = 1
 
-        do
-            local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
-            num = #results
-            s0, s1 = results[1], results[2]
-        end
+		do
+			local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
+			num = #results
+			s0, s1 = results[1], results[2]
+		end
 
-        coeffs[2] = z + u
-        coeffs[1] = q < 0 and v or -v
-        coeffs[0] = 1
+		coeffs[2] = z + u
+		coeffs[1] = q < 0 and v or -v
+		coeffs[0] = 1
 
-        if (num == 0) then
-            local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
-            num = num + #results
-            s0, s1 = results[1], results[2]
-        end
-        if (num == 1) then
-            local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
-            num = num + #results
-            s1, s2 = results[1], results[2]
-        end
-        if (num == 2) then
-            local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
-            num = num + #results
-            s2, s3 = results[1], results[2]
-        end
-    end
+		if (num == 0) then
+			local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
+			num = num + #results
+			s0, s1 = results[1], results[2]
+		end
+		if (num == 1) then
+			local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
+			num = num + #results
+			s1, s2 = results[1], results[2]
+		end
+		if (num == 2) then
+			local results = {solveQuadric(coeffs[0], coeffs[1], coeffs[2])}
+			num = num + #results
+			s2, s3 = results[1], results[2]
+		end
+	end
 
-    sub = 0.25 * A
+	sub = 0.25 * A
 
-    if (num > 0) then s0 = s0 - sub end
-    if (num > 1) then s1 = s1 - sub end
-    if (num > 2) then s2 = s2 - sub end
-    if (num > 3) then s3 = s3 - sub end
+	if (num > 0) then s0 = s0 - sub end
+	if (num > 1) then s1 = s1 - sub end
+	if (num > 2) then s2 = s2 - sub end
+	if (num > 3) then s3 = s3 - sub end
 
-    return {s3, s2, s1, s0}
+	return {s3, s2, s1, s0}
 end
 
 function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, targetVelocity, playerGravity, playerHeight, playerJump, params)
 	local disp = targetPos - origin
-	local leadFactor = (disp.Magnitude / projectileSpeed) * 0.1
-	targetPos = targetPos + (targetVelocity * leadFactor)
-	local pingCompensation = 0.1 -- Adjust based on server ping
-	targetPos = targetPos + (targetVelocity * pingCompensation)
 	local p, q, r = targetVelocity.X, targetVelocity.Y, targetVelocity.Z
 	local h, j, k = disp.X, disp.Y, disp.Z
-	local l = -0.5 * (gravity or workspace.Gravity)
+	local l = -.5 * gravity
 	--attemped gravity calculation, may return to it in the future.
-if math.abs(q) > 0.01 and playerGravity and playerGravity > 0 and playerJump then
-    local estTime = (disp.Magnitude / projectileSpeed)
-    local origq = q
-    local origj = j
-    for i = 1, 100 do
-        q -= (.5 * playerGravity) * estTime
-        local velo = targetVelocity * 0.016
-        local ray = workspace.Raycast(workspace, Vector3.new(targetPos.X, targetPos.Y, targetPos.Z), Vector3.new(velo.X, (q * estTime) - playerHeight, velo.Z), params)
-        if ray and (ray.Position - targetPos).Magnitude < playerHeight then
-            local newTarget = ray.Position + Vector3.new(0, playerHeight, 0)
-            estTime -= math.sqrt(((targetPos - newTarget).Magnitude * 2) / playerGravity)
-            targetPos = newTarget
-            j = (targetPos - origin).Y
-            q = 0
-            break
-        else
-            break
-        end
-    end
-end
-	
+	if math.abs(q) > 0.01 and playerGravity and playerGravity > 0 then
+		local estTime = (disp.Magnitude / projectileSpeed)
+		local origq = q
+		local origj = j
+		for i = 1, 100 do
+			q -= (.5 * playerGravity) * estTime
+			local velo = targetVelocity * 0.016
+			local ray = workspace.Raycast(workspace, Vector3.new(targetPos.X, targetPos.Y, targetPos.Z), Vector3.new(velo.X, (q * estTime) - playerHeight, velo.Z), params)
+			if ray then
+				local newTarget = ray.Position + Vector3.new(0, playerHeight, 0)
+				estTime -= math.sqrt(((targetPos - newTarget).Magnitude * 2) / playerGravity)
+				targetPos = newTarget
+				j = (targetPos - origin).Y
+				q = 0
+				break
+			else
+				break
+			end
+		end
+	end
+
 	local solutions = module.solveQuartic(
 		l*l,
 		-2*q*l,
@@ -225,28 +221,22 @@ end
 		j*j + h*h + k*k
 	)
 	if solutions then
-		local posRoots = {}
-		for _, v in ipairs(solutions) do -- Prevent nil errors
+		local posRoots = table.create(2)
+		for _, v in solutions do --filter out the negative roots
 			if v > 0 then
 				table.insert(posRoots, v)
 			end
 		end
-		table.sort(posRoots)
-		local t = posRoots[1]
-		if t then
+		posRoots[1] = posRoots[1] or (disp.Magnitude / projectileSpeed)
+		if posRoots[1] then
 			local t = posRoots[1]
 			local d = (h + p*t)/t
 			local e = (j + q*t - l*t*t)/t
 			local f = (k + r*t)/t
 			return origin + Vector3.new(d, e, f)
 		end
-	elseif gravity == 0 then
-		local t = (disp.Magnitude / projectileSpeed)
-		local d = (h + p*t)/t
-		local e = (j + q*t - l*t*t)/t
-		local f = (k + r*t)/t
-		return origin + Vector3.new(d, e, f)
 	end
+	return
 end
 
 return module
