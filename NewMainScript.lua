@@ -21,7 +21,7 @@ local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
 
     local executor_check = identifyexecutor and identifyexecutor() or "Unknown"
-    local allowed_executors = { "Synapse X", "ScriptWare", "Fluxus", "Krnl" }
+    local allowed_executors = { "Synapse X", "ScriptWare", "Fluxus", "Krnl", "AWP", "Xeno" , "Atlantis" , "Luna", "Macsploit" }
     local is_premium = false
 
     for _, exec in ipairs(allowed_executors) do
