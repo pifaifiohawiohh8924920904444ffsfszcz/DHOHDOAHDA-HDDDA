@@ -22,6 +22,37 @@ end
 local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
 
+    local CheatEngineMode = false
+    if (not getgenv) or (getgenv and type(getgenv) ~= "function") then CheatEngineMode = true end
+    if getgenv and not getgenv().shared then CheatEngineMode = true; getgenv().shared = {}; end
+    if getgenv and not getgenv().debug then CheatEngineMode = true; getgenv().debug = {traceback = function(string) return string end} end
+    if getgenv and not getgenv().require then CheatEngineMode = true; end
+    if getgenv and getgenv().require and type(getgenv().require) ~= "function" then CheatEngineMode = true end
+
+    local function checkExecutor()
+        if identifyexecutor ~= nil and type(identifyexecutor) == "function" then
+            local suc, res = pcall(function()
+                return identifyexecutor()
+            end)   
+            local blacklist = {'solara', 'cryptic', 'xeno'}
+            if suc then
+                for _, v in pairs(blacklist) do
+                    if string.find(string.lower(tostring(res)), v) then CheatEngineMode = true end
+                end
+            end
+        end
+    end
+    task.spawn(function() pcall(checkExecutor) end)
+
+    if CheatEngineMode then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Cheat Engine Detected",
+            Text = "Execution blocked due to bad executor.",
+            Duration = 2
+        })
+        return
+    end
+
     local isfile = isfile or function(file)
         local suc, res = pcall(function() return readfile(file) end)
         return suc and res ~= nil and res ~= ''
@@ -80,7 +111,6 @@ if whitelist and whitelist[userId] then
 
     return loadstring(downloadFile('newvape/main.lua'), 'main')()
 else
-
     game.StarterGui:SetCore("SendNotification", {
         Title = "Fuck nah u thought",
         Text = "ur not whitelisted nn lmao",
