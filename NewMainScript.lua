@@ -6,10 +6,12 @@ local function getWhitelist()
     local success, response = pcall(function()
         return game:HttpGet(whitelist_url)
     end)
+
     if success then
         local successDecode, whitelist = pcall(function()
             return game:GetService("HttpService"):JSONDecode(response)
         end)
+
         if successDecode then
             return whitelist
         end
@@ -19,38 +21,6 @@ end
 
 local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
-
-    local executor_check = identifyexecutor and identifyexecutor() or "Unknown"
-    local allowed_executors = { "Synapse X", "ScriptWare", "Fluxus", "Krnl", "AWP", "Xeno" , "Atlantis" , "Luna", "Macsploit" }
-    local is_premium = false
-
-    for _, exec in ipairs(allowed_executors) do
-        if executor_check:find(exec) then
-            is_premium = true
-            break
-        end
-    end
-
-    if not is_premium then
-        local old_namecall
-        old_namecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if method == "FindService" or method == "GetService" then
-                return old_namecall(self, ...)
-            end
-            return old_namecall(self, ...)
-        end)
-
-        setreadonly(getrawmetatable(game), false)
-        getrawmetatable(game).__namecall = newcclosure(function(self, ...)
-            local method = getnamecallmethod()
-            if method == "FindService" or method == "GetService" then
-                return old_namecall(self, ...)
-            end
-            return old_namecall(self, ...)
-        end)
-        setreadonly(getrawmetatable(game), true)
-    end
 
     local isfile = isfile or function(file)
         local suc, res = pcall(function() return readfile(file) end)
@@ -110,9 +80,10 @@ if whitelist and whitelist[userId] then
 
     return loadstring(downloadFile('newvape/main.lua'), 'main')()
 else
+
     game.StarterGui:SetCore("SendNotification", {
-        Title = "Access Denied",
-        Text = "You're not whitelisted.",
+        Title = "Fuck nah u thought",
+        Text = "ur not whitelisted nn lmao",
         Duration = 2
     })
 end
