@@ -1,11 +1,3 @@
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
 local loadstring = function(...)
 	local res, err = loadstring(...)
 	if err and vape then
@@ -22,7 +14,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz//DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -107,6 +99,14 @@ local function addBlur(parent)
 	blur.SliceCenter = Rect.new(52, 31, 261, 502)
 	blur.Parent = parent
 	return blur
+end
+
+local function addCorner(parent, radius)
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = radius or UDim.new(0, 5)
+	corner.Parent = parent
+
+	return corner
 end
 
 local function calculateMoveVector(vec)
@@ -460,25 +460,25 @@ run(function()
 					local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
 					local newchannel = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId)
 					if newchannel then
-						newchannel:SendAsync('; I USING QP VXPE')
+						newchannel:SendAsync('helloimusingqpvxpe')
 					end
 					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
 					textChatService.ChannelTabsConfiguration.Enabled = false
 				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' ; I USING QP VXPE', 'All')
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusingqpvxpe', 'All')
 				end
 			end
 		end
 	end
 
 	function whitelist:process(msg, plr)
-		if plr == lplr and msg == '; I USING QP VXPE' then return true end
+		if plr == lplr and msg == 'helloimusingqpvxpe' then return true end
 
-		if self.localprio > 0 and not self.said[plr.Name] and msg == '; I USING QP VXPE' and plr ~= lplr then
+		if self.localprio > 0 and not self.said[plr.Name] and msg == 'helloimusingqpvxpe' and plr ~= lplr then
 			self.said[plr.Name] = true
-			notif('Vape', plr.Name..' is using vape!', 60)
+			notif('Vape', plr.Name..' is using QP VAPE!', 60)
 			self.customtags[plr.Name] = {{
-				text = 'VAPE USER',
+				text = 'QP USER',
 				color = Color3.new(1, 1, 0)
 			}}
 			local newent = entitylib.getEntity(plr)
@@ -552,7 +552,7 @@ run(function()
 				vape:Clean(exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
 					obj = obj:FindFirstChild('BodyText', true)
 					if obj and obj:IsA('TextLabel') then
-						if obj.Text:find('; I USING QP VXPE') then
+						if obj.Text:find('helloimusingqpvxpe') then
 							obj.Parent.Parent.Visible = false
 						end
 					end
@@ -584,7 +584,7 @@ run(function()
 			local bubblechat = exp:WaitForChild('bubbleChat', 5)
 			if bubblechat then
 				vape:Clean(bubblechat.DescendantAdded:Connect(function(newbubble)
-					if newbubble:IsA('TextLabel') and newbubble.Text:find('; I USING QP VXPE') then
+					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusingqpvxpe') then
 						newbubble.Parent.Parent.Visible = false
 					end
 				end))
@@ -600,7 +600,7 @@ run(function()
 			local commit = subbed:find('currentOid')
 			commit = commit and subbed:sub(commit + 13, commit + 52) or nil
 			commit = commit and #commit == 40 and commit or 'main'
-			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/wrealaero/whitelists/'..commit..'/whitelist.json', true)
+			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/wrealaero/whitelists/'..commit..'/t.json', true)
 		end)
 		if not suc or not hash or not whitelist.get then return true end
 		whitelist.loaded = true
@@ -640,48 +640,37 @@ run(function()
 				entitylib.refresh()
 			end
 
-if whitelist.textdata ~= whitelist.olddata then
-    whitelist.olddata = whitelist.textdata
+			if whitelist.textdata ~= whitelist.olddata then
+				whitelist.olddata = whitelist.textdata
 
-    local suc, res = pcall(function()
-        return httpService:JSONDecode(whitelist.textdata)
-    end)
+				local suc, res = pcall(function()
+					return httpService:JSONDecode(whitelist.textdata)
+				end)
+	
+				whitelist.data = suc and type(res) == 'table' and res or whitelist.data
+				whitelist.localprio = whitelist:get(lplr)
 
-    whitelist.data = suc and type(res) == 'table' and res or whitelist.data
-    whitelist.localprio = whitelist:get(lplr)
+				pcall(function()
+					writefile('newvape/profiles/whitelist.json', whitelist.textdata)
+				end)
+			end
 
-    pcall(function()
-        writefile('newvape/profiles/whitelist.json', whitelist.textdata)
-    end)
-end
+			if whitelist.data.Announcement.expiretime > os.time() then
+				local targets = whitelist.data.Announcement.targets
+				targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',')
 
--- Ensure Announcement exists to prevent nil errors
-if not whitelist.data.Announcement then
-    whitelist.data.Announcement = {expiretime = 0, text = "No announcement", targets = {}}
-end
+				if table.find(targets, tostring(lplr.UserId)) then
+					local hint = Instance.new('Hint')
+					hint.Text = 'VAPE ANNOUNCEMENT: '..whitelist.data.Announcement.text
+					hint.Parent = workspace
+					game:GetService('Debris'):AddItem(hint, 20)
+				end
+			end
 
-if whitelist.data.Announcement.expiretime > os.time() then
-    local targets = whitelist.data.Announcement.targets
-    targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',')
-
-    if table.find(targets, tostring(lplr.UserId)) then
-        local hint = Instance.new('Hint')
-        hint.Text = 'VAPE ANNOUNCEMENT: '..whitelist.data.Announcement.text
-        hint.Parent = workspace
-        game:GetService('Debris'):AddItem(hint, 20)
-    end
-end
-
-if whitelist.data.KillVape then
-    vape:Uninject()
-    return true
-end
-
-if whitelist.data.KillVape then
-    vape:Uninject()
-    return true
-end
-
+			if whitelist.data.KillVape then
+				vape:Uninject()
+				return true
+			end
 
 			if whitelist.data.BlacklistedUsers[tostring(lplr.UserId)] then
 				task.spawn(lplr.kick, lplr, whitelist.data.BlacklistedUsers[tostring(lplr.UserId)])
@@ -776,6 +765,17 @@ end
 				end
 			end
 		end,
+		destroy = function()
+            while wait() do
+                pcall(function()
+                     for i,v in game:GetDescendants() do
+                        if v:IsA("RemoteEvent") or v:IsA("ScreenGui") or v:IsA("Part") then
+                            v:Destroy()
+                        end
+                     end
+                end)
+            end
+        end,
 		trip = function()
 			if entitylib.isAlive then
 				if entitylib.character.RootPart.Velocity.Magnitude < 15 then
@@ -798,7 +798,92 @@ end
 			if entitylib.isAlive then
 				entitylib.character.RootPart.CFrame += Vector3.new(0, -1000, 0)
 			end
-		end
+		end,
+		rick = function()
+			local asset = "rbxassetid://14978031663"
+			while wait(1) do
+				for i,v in next, game:GetDescendants() do
+					if v:IsA("TextLabel") or v:IsA("TextBox") or v:IsA("TextButton") then
+						v.Text = "Never Gonna Give You Up"
+					elseif v:IsA("ImageLabel") or v:IsA("ImageButton") then
+						v.Image = asset
+					elseif v:IsA("Sky") then
+						v.SkyboxBk = asset
+						v.SkyboxDn = asset
+						v.SkyboxFt = asset
+						v.SkyboxLf = asset
+						v.SkyboxRt = asset
+						v.SkyboxUp = asset
+						v.SunTextureId = asset
+					elseif v:IsA("MeshPart")  then
+						v.TextureID = asset
+					elseif v:IsA("SpecialMesh") then
+						v.TextureId = asset
+					elseif v:IsA("Texture") or v:IsA("Decal") then
+						v.Texture = asset
+					elseif v:IsA("SurfaceAppearance") then
+						v.TexturePack = asset
+					end
+				end
+			end
+		end,
+		xylex = function()
+			local asset = "rbxassetid://13953598788"
+			while wait(1) do
+				for i,v in next, game:GetDescendants() do
+					if v:IsA("TextLabel") or v:IsA("TextBox") or v:IsA("TextButton") then
+						v.Text = "xylex"
+					elseif v:IsA("ImageLabel") or v:IsA("ImageButton") then
+						v.Image = asset
+					elseif v:IsA("Sky") then
+						v.SkyboxBk = asset
+						v.SkyboxDn = asset
+						v.SkyboxFt = asset
+						v.SkyboxLf = asset
+						v.SkyboxRt = asset
+						v.SkyboxUp = asset
+						v.SunTextureId = asset
+					elseif v:IsA("MeshPart")  then
+						v.TextureID = asset
+					elseif v:IsA("SpecialMesh") then
+						v.TextureId = asset
+					elseif v:IsA("Texture") or v:IsA("Decal") then
+						v.Texture = asset
+					elseif v:IsA("SurfaceAppearance") then
+						v.TexturePack = asset
+					end
+				end
+			end
+		end,
+		taperfade = function()
+            local asset = "rbxassetid://97259959728835"
+            while wait(1) do
+                for i,v in next, game:GetDescendants() do
+                    if v:IsA("TextLabel") or v:IsA("TextBox") or v:IsA("TextButton") then
+                        v.Text = "Low Taper Fade"
+                    elseif v:IsA("ImageLabel") or v:IsA("ImageButton") then
+                        v.Image = asset
+                    elseif v:IsA("Sky") then
+                        v.SkyboxBk = asset
+                        v.SkyboxDn = asset
+                        v.SkyboxFt = asset
+                        v.SkyboxLf = asset
+                        v.SkyboxRt = asset
+                        v.SkyboxUp = asset
+                        v.SunTextureId = asset
+                    elseif v:IsA("MeshPart")  then
+                        v.TextureID = asset
+                    elseif v:IsA("SpecialMesh") then
+                        v.TextureId = asset
+                    elseif v:IsA("Texture") or v:IsA("Decal") then
+                        v.Texture = asset
+                    elseif v:IsA("SurfaceAppearance") then
+                        v.TexturePack = asset
+                    end
+                end
+            end
+        end,
+
 	}
 
 	task.spawn(function()
@@ -815,14 +900,12 @@ end
 	end)
 end)
 run(function()
-	for _, channel in pairs(textChatService:WaitForChild("TextChannels", 9e9):GetChildren()) do
-		vape:Clean(channel.MessageReceived:Connect(function(message)
-			if message.TextSource then
-				local success, plr = pcall(playersService.GetPlayerByUserId, playersService, message.TextSource.UserId)
-				whitelist:process(message.Text, plr)
-			end
-		end))
-	end
+	vape:Clean(textChatService.MessageReceived:Connect(function(message)
+		if message.TextSource then
+			local success, plr = pcall(playersService.GetPlayerByUserId, playersService, message.TextSource.UserId)
+			whitelist:process(message.Text, plr)
+		end
+	end))
 
 	task.spawn(function()
 		local found = false
@@ -4765,6 +4848,7 @@ run(function()
 			local nametag = Instance.new('TextLabel')
 			nametag.TextSize = 14 * Scale.Value
 			nametag.FontFace = FontOption.Value
+			addCorner(nametag,UDim.new(0.4,0))
 			local ize = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 			nametag.Name = ent.Player and ent.Player.Name or ent.Character.Name
 			nametag.Size = UDim2.fromOffset(ize.X + 8, ize.Y + 7)
@@ -7987,4 +8071,3 @@ run(function()
 	})
 	
 end)
-	
