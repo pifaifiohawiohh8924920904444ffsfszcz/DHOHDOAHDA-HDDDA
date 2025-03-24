@@ -1,4 +1,4 @@
---This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
+--This watermark is used to delete the file if it's cached, remove it to make the file persist after vape updates.
 
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
@@ -33,7 +33,11 @@ local playersService = cloneref(game:GetService('Players'))
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+			if path == 'newvape/games/universal.lua' then
+				return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/main/main.lua', true)
+			else
+				return game:HttpGet('https://raw.githubusercontent.com/QP-Offcial/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+			end
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -60,12 +64,13 @@ local function finishLoading()
 	vape:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
 		if (not teleportedServers) and (not shared.VapeIndependent) then
 			teleportedServers = true
-			local teleportScript = [[
+			local teleportScript = "script_key = '"..(getgenv().script_key or "")..[[';
+			getgenv().script_key = script_key
 				shared.vapereload = true
 				if shared.VapeDeveloper then
 					loadstring(readfile('newvape/loader.lua'), 'loader')()
 				else
-					loadstring(game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
+					loadstring(game:HttpGet('https://raw.githubusercontent.com/QP-Offcial/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
 				end
 			]]
 			if shared.VapeDeveloper then
@@ -96,7 +101,6 @@ if not isfolder('newvape/assets/'..gui) then
 	makefolder('newvape/assets/'..gui)
 end
 vape = loadstring(downloadFile('newvape/guis/'..gui..'.lua'), 'gui')()
--- shared.vape = vape
 
 local XFunctions = loadstring(downloadFile('newvape/libraries/XFunctions.lua'), 'XFunctions')()
 XFunctions:SetGlobalData('XFunctions', XFunctions)
@@ -106,20 +110,19 @@ local PerformanceModule = loadstring(downloadFile('newvape/libraries/performance
 XFunctions:SetGlobalData('Performance', PerformanceModule)
 
 local utils_functions = loadstring(downloadFile('newvape/libraries/utils.lua'), 'Utils')()
-for i: (any), v: (...any) -> (...any) in utils_functions do --> sideloads all render global utility functions from libraries/utils.lua
-    getfenv()[i] = v;
-end;
+for i, v in pairs(utils_functions) do
+	getfenv()[i] = v
+end
 
 getgenv().InfoNotification = function(title, msg, dur)
-	warn('info', tostring(title), tostring(msg), tostring(dur))
 	vape:CreateNotification(title, msg, dur)
 end
+
 getgenv().warningNotification = function(title, msg, dur)
-	warn('warn', tostring(title), tostring(msg), tostring(dur))
 	vape:CreateNotification(title, msg, dur, 'warning')
 end
+
 getgenv().errorNotification = function(title, msg, dur)
-	warn("error", tostring(title), tostring(msg), tostring(dur))
 	vape:CreateNotification(title, msg, dur, 'alert')
 end
 
@@ -131,7 +134,7 @@ if not shared.VapeIndependent then
 	else
 		if not shared.VapeDeveloper then
 			local suc, res = pcall(function()
-				return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/'..readfile('newvape/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true)
+				return game:HttpGet('https://raw.githubusercontent.com/QP-Offcial/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true)
 			end)
 			if suc and res ~= '404: Not Found' then
 				loadstring(downloadFile('newvape/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
