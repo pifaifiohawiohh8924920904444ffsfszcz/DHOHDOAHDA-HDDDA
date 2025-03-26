@@ -2,67 +2,67 @@ local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local httpService = game:GetService("HttpService")
 
-local lastMemCheck = tick()
 local lastHeartbeat = tick()
-local crashDetected = false
-local logErrors = {}
+local crashLog = {}
+local fpsDropTime = 0
 
--- 🟢 Function to Log Errors
-local function logIssue(message)
-    table.insert(logErrors, message)
-    warn("[⚠️ Crash Prevention] " .. message)
-
-    -- (Optional) Save to a local file for debugging
+local function log(txt)
+    table.insert(crashLog, txt)
+    print("[Crash Helper] " .. txt)
     pcall(function()
-        writefile("CrashLog.txt", httpService:JSONEncode(logErrors))
+        writefile("CrashLog.txt", httpService:JSONEncode(crashLog))
     end)
 end
 
--- 🟢 Memory Monitor: Prevents Overload
-local function memoryMonitor()
-    while task.wait(1) do
-        local memUsage = collectgarbage("count") / 1024 -- MB
-        if memUsage > 500 then
-            logIssue("High memory usage detected: " .. memUsage .. "MB")
-            collectgarbage() -- Free memory
-        end
-    end
-end
-
--- 🟢 Freeze Detection: Detects if Roblox is Stalling
-local function detectFreeze()
+local function memCheck()
     while task.wait(2) do
+        local mem = collectgarbage("count") / 1024
+        if mem > 500 then
+            log("Memory too high: " .. math.floor(mem) .. "MB, fixing...")
+            collectgarbage()
+            log("Memory cleaned")
+        end
+    end
+end
+
+local function freezeCheck()
+    while task.wait(1) do
         if tick() - lastHeartbeat > 4 then
-            logIssue("Possible freeze detected! Script execution delay.")
+            log("Game froze or lag spike detected")
         end
     end
 end
 
--- 🟢 Error Handler: Catches Any Runtime Errors
-local function monitorErrors()
-    local success, err = pcall(function()
-        while task.wait(1) do
-            -- Check if game is still responsive
-            if not game or not players then
-                logIssue("Game instance disappeared. Possible forced shutdown.")
-                crashDetected = true
+local function fpsCheck()
+    while task.wait(1) do
+        local fps = math.floor(1 / runService.RenderStepped:Wait())
+        if fps < 20 then
+            fpsDropTime = fpsDropTime + 1
+            if fpsDropTime >= 3 then
+                log("FPS very low for too long: " .. fps)
+                fpsDropTime = 0
             end
+        else
+            fpsDropTime = 0
         end
-    end)
-
-    if not success then
-        logIssue("Lua runtime error detected: " .. tostring(err))
     end
 end
 
--- 🟢 Heartbeat Monitor: Keeps Track of Performance
+local function playerCheck()
+    while task.wait(3) do
+        if not players.LocalPlayer then
+            log("Player missing, Roblox may crash soon")
+        end
+    end
+end
+
 runService.Heartbeat:Connect(function()
     lastHeartbeat = tick()
 end)
 
--- 🔥 Start All Crash Prevention Systems
-task.spawn(memoryMonitor)
-task.spawn(detectFreeze)
-task.spawn(monitorErrors)
+task.spawn(memCheck)
+task.spawn(freezeCheck)
+task.spawn(fpsCheck)
+task.spawn(playerCheck)
 
-logIssue("Crash prevention initialized successfully.")
+log("Crash Helper is ready")
