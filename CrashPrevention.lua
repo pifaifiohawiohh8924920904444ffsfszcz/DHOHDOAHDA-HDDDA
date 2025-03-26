@@ -5,6 +5,7 @@ local httpService = game:GetService("HttpService")
 local lastHeartbeat = tick()
 local crashLog = {}
 local fpsDropTime = 0
+local memOverloadTime = 0
 
 local function log(txt)
     table.insert(crashLog, txt)
@@ -18,9 +19,16 @@ local function memCheck()
     while task.wait(2) do
         local mem = collectgarbage("count") / 1024
         if mem > 500 then
-            log("Memory too high: " .. math.floor(mem) .. "MB, fixing...")
+            memOverloadTime = memOverloadTime + 1
+            log("Memory too high: " .. math.floor(mem) .. "MB")
             collectgarbage()
             log("Memory cleaned")
+            if memOverloadTime >= 3 then
+                log("Memory keeps overloading, possible memory leak")
+                memOverloadTime = 0
+            end
+        else
+            memOverloadTime = 0
         end
     end
 end
@@ -28,7 +36,7 @@ end
 local function freezeCheck()
     while task.wait(1) do
         if tick() - lastHeartbeat > 4 then
-            log("Game froze or lag spike detected")
+            log("Game freeze or lag spike detected")
         end
     end
 end
@@ -39,7 +47,7 @@ local function fpsCheck()
         if fps < 20 then
             fpsDropTime = fpsDropTime + 1
             if fpsDropTime >= 3 then
-                log("FPS very low for too long: " .. fps)
+                log("FPS low for too long: " .. fps)
                 fpsDropTime = 0
             end
         else
@@ -65,4 +73,4 @@ task.spawn(freezeCheck)
 task.spawn(fpsCheck)
 task.spawn(playerCheck)
 
-log("Crash Helper is ready")
+log("Crash Helper ready")
