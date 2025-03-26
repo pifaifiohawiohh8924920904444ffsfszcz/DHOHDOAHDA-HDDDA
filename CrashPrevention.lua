@@ -1,3 +1,5 @@
+-- in testing rn
+
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local httpService = game:GetService("HttpService")
