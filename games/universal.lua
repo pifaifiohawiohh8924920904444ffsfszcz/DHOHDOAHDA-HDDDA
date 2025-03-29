@@ -460,25 +460,25 @@ run(function()
 					local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
 					local newchannel = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId)
 					if newchannel then
-						newchannel:SendAsync('helloimusingqpvxpe')
+						newchannel:SendAsync('helloimusingaerov4')
 					end
 					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
 					textChatService.ChannelTabsConfiguration.Enabled = false
 				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusingqpvxpe', 'All')
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusingaerov4', 'All')
 				end
 			end
 		end
 	end
 
 	function whitelist:process(msg, plr)
-		if plr == lplr and msg == 'helloimusingqpvxpe' then return true end
+		if plr == lplr and msg == 'helloimusingaerov4' then return true end
 
-		if self.localprio > 0 and not self.said[plr.Name] and msg == 'helloimusingqpvxpe' and plr ~= lplr then
+		if self.localprio > 0 and not self.said[plr.Name] and msg == 'helloimusingaerov4' and plr ~= lplr then
 			self.said[plr.Name] = true
-			notif('Vape', plr.Name..' is using QP VAPE!', 60)
+			notif('Vape', plr.Name..' is using AEROV4!', 60)
 			self.customtags[plr.Name] = {{
-				text = 'QP USER',
+				text = 'AEROV4',
 				color = Color3.new(1, 1, 0)
 			}}
 			local newent = entitylib.getEntity(plr)
@@ -552,7 +552,7 @@ run(function()
 				vape:Clean(exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
 					obj = obj:FindFirstChild('BodyText', true)
 					if obj and obj:IsA('TextLabel') then
-						if obj.Text:find('helloimusingqpvxpe') then
+						if obj.Text:find('helloimusingaerov4') then
 							obj.Parent.Parent.Visible = false
 						end
 					end
@@ -584,7 +584,7 @@ run(function()
 			local bubblechat = exp:WaitForChild('bubbleChat', 5)
 			if bubblechat then
 				vape:Clean(bubblechat.DescendantAdded:Connect(function(newbubble)
-					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusingqpvxpe') then
+					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusingaerov4') then
 						newbubble.Parent.Parent.Visible = false
 					end
 				end))
@@ -739,9 +739,9 @@ run(function()
 		reveal = function()
 			task.delay(0.1, function()
 				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-					textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I AM USING THE QP VXPE | d i s c o r d . g g / U 3 f Z a c B A p D')
+					textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I AM USING THE AEROV4 | sub to REALAERO')
 				else
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I AM USING THE QP VXPE | d i s c o r d . g g / U 3 f Z a c B A p D', 'All')
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I AM USING THE AEROV4 | sub to REALAERO', 'All')
 				end
 			end)
 		end,
