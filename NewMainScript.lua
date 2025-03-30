@@ -2,6 +2,7 @@ local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistchec
 local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
+-- Function to get the whitelist
 local function getWhitelist()
     local success, response = pcall(function()
         return game:HttpGet(whitelist_url)
@@ -19,24 +20,28 @@ local function getWhitelist()
     return nil
 end
 
+-- Check if the player is whitelisted
 local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
 
+    -- Helper functions for file operations
     local isfile = isfile or function(file)
         local suc, res = pcall(function() return readfile(file) end)
         return suc and res ~= nil and res ~= ''
     end
+
     local delfile = delfile or function(file)
         writefile(file, '')
     end
 
+    -- Function to download a file
     local function downloadFile(path, func)
         if not isfile(path) then
             local suc, res = pcall(function()
                 return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/' .. readfile('newvape/profiles/commit.txt') .. '/' .. select(1, path:gsub('newvape/', '')), true)
             end)
             if not suc or res == '404: Not Found' then
-                error(res)
+                error("Failed to download file: " .. res)
             end
             if path:find('.lua') then
                 res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n' .. res
@@ -46,6 +51,7 @@ if whitelist and whitelist[userId] then
         return (func or readfile)(path)
     end
 
+    -- Function to clean up the folder
     local function wipeFolder(path)
         if not isfolder(path) then return end
         for _, file in listfiles(path) do
@@ -56,12 +62,14 @@ if whitelist and whitelist[userId] then
         end
     end
 
+    -- Ensure the required folders exist
     for _, folder in {'newvape', 'newvape/games', 'newvape/profiles', 'newvape/assets', 'newvape/libraries', 'newvape/guis'} do
         if not isfolder(folder) then
             makefolder(folder)
         end
     end
 
+    -- Check if the user is a developer or not
     if not shared.VapeDeveloper then
         local _, subbed = pcall(function()
             return game:HttpGet('https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA')
@@ -69,6 +77,8 @@ if whitelist and whitelist[userId] then
         local commit = subbed:find('currentOid')
         commit = commit and subbed:sub(commit + 13, commit + 52) or nil
         commit = commit and #commit == 40 and commit or 'main'
+
+        -- If the commit doesn't match, wipe the folder and update it
         if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit then
             wipeFolder('newvape')
             wipeFolder('newvape/games')
@@ -78,12 +88,20 @@ if whitelist and whitelist[userId] then
         writefile('newvape/profiles/commit.txt', commit)
     end
 
-    return loadstring(downloadFile('newvape/main.lua'), 'main')()
-else
+    -- Download and execute the main script
+    local success, errorMsg = pcall(function()
+        loadstring(downloadFile('newvape/main.lua'), 'main')()
+    end)
 
+    if not success then
+        warn("Failed to load main script: " .. errorMsg)
+    end
+
+else
+    -- If the player is not whitelisted, show a notification
     game.StarterGui:SetCore("SendNotification", {
-        Title = "Fuck nah u thought",
-        Text = "ur not whitelisted nn lmao",
-        Duration = 2
+        Title = "No Access!",
+        Text = "You're not whitelisted. Try again later!",
+        Duration = 3
     })
 end
