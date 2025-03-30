@@ -1,55 +1,53 @@
--- in testing rn
+-- in beta rn
 
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local httpService = game:GetService("HttpService")
+local teleportService = game:GetService("TeleportService")
+local localPlayer = players.LocalPlayer
 
 local lastHeartbeat = tick()
 local crashLog = {}
 local fpsDropTime = 0
 local memOverloadTime = 0
+local freezeCount = 0
+local criticalMemoryThreshold = 500 
+local freezeThreshold = 5 
+local fpsThreshold = 20 
 
 local function log(txt)
-    table.insert(crashLog, txt)
+    local logMsg = os.date("[%X] ") .. txt
+    table.insert(crashLog, logMsg)
     print("[Crash Helper] " .. txt)
     pcall(function()
         writefile("CrashLog.txt", httpService:JSONEncode(crashLog))
     end)
 end
 
-local function memCheck()
-    while task.wait(2) do
-        local mem = collectgarbage("count") / 1024
-        if mem > 500 then
-            memOverloadTime = memOverloadTime + 1
-            log("Memory too high: " .. math.floor(mem) .. "MB")
-            collectgarbage()
-            log("Memory cleaned")
-            if memOverloadTime >= 3 then
-                log("Memory keeps overloading, possible memory leak")
-                memOverloadTime = 0
-            end
-        else
-            memOverloadTime = 0
-        end
+local function safeCollectGarbage()
+    local mem = collectgarbage("count") / 1024
+    if mem > criticalMemoryThreshold then
+        log("Yo, memory's at " .. math.floor(mem) .. "MB. Time to clean up.")
+        task.wait(0.5) 
+        collectgarbage()
+        task.wait(1)
+        log("Memory cleaned. Now at: " .. math.floor(collectgarbage("count") / 1024) .. "MB")
     end
 end
 
-local function freezeCheck()
-    while task.wait(1) do
-        if tick() - lastHeartbeat > 4 then
-            log("Game freeze or lag spike detected")
-        end
+local function monitorMemory()
+    while task.wait(10) do 
+        safeCollectGarbage()
     end
 end
 
-local function fpsCheck()
-    while task.wait(1) do
+local function monitorFPS()
+    while task.wait(3) do 
         local fps = math.floor(1 / runService.RenderStepped:Wait())
-        if fps < 20 then
+        if fps < fpsThreshold then
             fpsDropTime = fpsDropTime + 1
-            if fpsDropTime >= 3 then
-                log("FPS low for too long: " .. fps)
+            if fpsDropTime >= 2 then -- Less aggressive warnings
+                log("FPS is tanking: " .. fps .. " FPS. Might wanna tweak your settings.")
                 fpsDropTime = 0
             end
         else
@@ -58,10 +56,39 @@ local function fpsCheck()
     end
 end
 
-local function playerCheck()
-    while task.wait(3) do
+local function monitorFreeze()
+    while task.wait(3) do 
+        if tick() - lastHeartbeat > freezeThreshold then
+            freezeCount = freezeCount + 1
+            log("Bruh, game lagged out? That's " .. freezeCount .. " times now.")
+            if freezeCount >= 3 then
+                log("Your game keeps freezing. Try lowering graphics settings or restarting.")
+                freezeCount = 0
+            end
+        else
+            freezeCount = 0
+        end
+    end
+end
+
+local function monitorPlayer()
+    while task.wait(10) do 
         if not players.LocalPlayer then
-            log("Player missing, Roblox may crash soon")
+            log("Where tf did u go? LocalPlayer missing, possible crash?")
+            task.wait(2)
+            if not players.LocalPlayer then
+                log("Yep, it's bad. If u reading this, restart Roblox.")
+            end
+        end
+    end
+end
+
+local function autoReconnect()
+    while task.wait(15) do
+        if not localPlayer or not localPlayer.Parent then
+            log("Game crashed? Attempting to reconnect in 5 seconds...")
+            task.wait(5)
+            teleportService:Teleport(game.PlaceId)
         end
     end
 end
@@ -70,9 +97,10 @@ runService.Heartbeat:Connect(function()
     lastHeartbeat = tick()
 end)
 
-task.spawn(memCheck)
-task.spawn(freezeCheck)
-task.spawn(fpsCheck)
-task.spawn(playerCheck)
+task.spawn(monitorMemory)
+task.spawn(monitorFPS)
+task.spawn(monitorFreeze)
+task.spawn(monitorPlayer)
+task.spawn(autoReconnect)
 
-log("Crash Helper ready")
+log("Crash Prevention System Loaded for BedWars. If you still crash, blame your WiFi.")
