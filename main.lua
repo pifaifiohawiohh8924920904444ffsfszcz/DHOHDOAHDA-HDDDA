@@ -3,8 +3,12 @@
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
 
--- Loading the crash prevention script
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/refs/heads/main/CrashPrevention.lua"))()
+local success, err = pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/refs/heads/main/CrashPrevention.lua"))()
+end)
+if not success then
+    warn("Crash prevention script failed to load:", err)
+end
 
 -- why do exploits fail to implement anything correctly? Is it really that hard?
 if identifyexecutor then
