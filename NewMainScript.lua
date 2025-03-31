@@ -1,18 +1,26 @@
-local whitelist_url = "https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/whitelist1/main/whitelist.json"
-local player = game.Players.LocalPlayer
-local userId = tostring(player.UserId)
+local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistcheck/main/whitelist.json"
+local httpService = game:GetService("HttpService")
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+local userId = tostring(localPlayer.UserId)
+
+local whitelist_cache = nil
+shared.Injected = true
 
 local function getWhitelist()
+    if whitelist_cache then return whitelist_cache end
+
     local success, response = pcall(function()
         return game:HttpGet(whitelist_url)
     end)
 
-    if success then
+    if success and response and response ~= "404: Not Found" then
         local successDecode, whitelist = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(response)
+            return httpService:JSONDecode(response)
         end)
 
-        if successDecode then
+        if successDecode and typeof(whitelist) == "table" then
+            whitelist_cache = whitelist 
             return whitelist
         end
     end
@@ -20,7 +28,94 @@ local function getWhitelist()
 end
 
 local whitelist = getWhitelist()
-if whitelist and whitelist[userId] then
+local userTag = whitelist and whitelist[userId] or nil
+
+local function addChatTag()
+    if not shared.Injected or not userTag then return end
+
+    local chatEvents = game.ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    if chatEvents and chatEvents.OnMessageDoneFiltering then
+        chatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(messageData)
+            if tostring(players:GetUserIdFromNameAsync(messageData.FromSpeaker)) == userId then
+                messageData.ExtraData = messageData.ExtraData or {}
+                messageData.ExtraData.Tags = messageData.ExtraData.Tags or {}
+
+                table.insert(messageData.ExtraData.Tags, {
+                    TagText = "[" .. userTag .. "]",
+                    TagColor = Color3.fromRGB(255, 50, 50)
+                })
+            end
+        end)
+    end
+end
+
+addChatTag()
+
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+
+local function createNotification(title, text)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Parent = screenGui
+    frame.Size = UDim2.new(0, 400, 0, 100)
+    frame.Position = UDim2.new(0.5, -200, 1, 50)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.5
+    frame.BorderSizePixel = 0
+    frame.AnchorPoint = Vector2.new(0.5, 1)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Parent = frame
+    titleLabel.Text = title
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.Position = UDim2.new(0, 0, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 20
+    titleLabel.TextStrokeTransparency = 0.8
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Parent = frame
+    textLabel.Text = text
+    textLabel.Size = UDim2.new(1, 0, 0, 70)
+    textLabel.Position = UDim2.new(0, 0, 0, 30)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextSize = 16
+    textLabel.TextStrokeTransparency = 0.8
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.TextXAlignment = Enum.TextXAlignment.Center
+    textLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+    local tweenIn = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -200, 0.9, -50)
+    })
+    local tweenOut = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
+        Position = UDim2.new(0.5, -200, 1, 50)
+    })
+
+    tweenIn:Play()
+    tweenIn.Completed:Connect(function()
+        wait(3)
+        tweenOut:Play()
+        tweenOut.Completed:Connect(function()
+            screenGui:Destroy()
+        end)
+    end)
+end
+
+if userTag then
+    createNotification("Whitelisted", "You're good to go, bro!")
+else
+    createNotification("Denied", "You're not whitelisted, bro.")
+end
+
+if userTag then
 
     local isfile = isfile or function(file)
         local suc, res = pcall(function() return readfile(file) end)
@@ -80,10 +175,6 @@ if whitelist and whitelist[userId] then
 
     return loadstring(downloadFile('newvape/main.lua'), 'main')()
 else
-
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "Fuck nah u thought",
-        Text = "ur not whitelisted nn lmao",
-        Duration = 2
-    })
+    -- No longer use default notification
+    createNotification("Denied", "You're not whitelisted, bro.")
 end
