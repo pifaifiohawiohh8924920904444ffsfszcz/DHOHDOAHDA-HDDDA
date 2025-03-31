@@ -60,41 +60,44 @@ local function createNotification(title, text)
 
     local frame = Instance.new("Frame")
     frame.Parent = screenGui
-    frame.Size = UDim2.new(0, 400, 0, 100)
-    frame.Position = UDim2.new(0.5, -200, 1, 50)
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    frame.BackgroundTransparency = 0.5
+    frame.Size = UDim2.new(0, 400, 0, 150)
+    frame.Position = UDim2.new(0.5, -200, 0.5, -75)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BackgroundTransparency = 0.85
     frame.BorderSizePixel = 0
-    frame.AnchorPoint = Vector2.new(0.5, 1)
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.ZIndex = 10
+    frame.ClipsDescendants = true
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Parent = frame
     titleLabel.Text = title
-    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.Size = UDim2.new(1, 0, 0, 35)
     titleLabel.Position = UDim2.new(0, 0, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 20
-    titleLabel.TextStrokeTransparency = 0.8
+    titleLabel.TextSize = 22
+    titleLabel.TextStrokeTransparency = 0.6
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextXAlignment = Enum.TextXAlignment.Center
 
     local textLabel = Instance.new("TextLabel")
     textLabel.Parent = frame
     textLabel.Text = text
-    textLabel.Size = UDim2.new(1, 0, 0, 70)
-    textLabel.Position = UDim2.new(0, 0, 0, 30)
+    textLabel.Size = UDim2.new(1, 0, 0, 90)
+    textLabel.Position = UDim2.new(0, 0, 0, 35)
     textLabel.BackgroundTransparency = 1
     textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.TextSize = 16
+    textLabel.TextSize = 18
     textLabel.TextStrokeTransparency = 0.8
     textLabel.Font = Enum.Font.Gotham
     textLabel.TextXAlignment = Enum.TextXAlignment.Center
     textLabel.TextYAlignment = Enum.TextYAlignment.Center
 
-    local tweenIn = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, -200, 0.9, -50)
+    local tweenIn = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -200, 0.5, -75)
     })
+
     local tweenOut = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
         Position = UDim2.new(0.5, -200, 1, 50)
     })
@@ -175,6 +178,5 @@ if userTag then
 
     return loadstring(downloadFile('newvape/main.lua'), 'main')()
 else
-    -- No longer use default notification
     createNotification("Denied", "You're not whitelisted, bro.")
 end
