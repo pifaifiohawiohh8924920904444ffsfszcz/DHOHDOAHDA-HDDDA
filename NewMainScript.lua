@@ -1,4 +1,4 @@
-local whitelist_url = "https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/whitelist.json/main/whitelist.json"
+local whitelist_url = "https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/whitelist1/main/whitelist.json"
 local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
