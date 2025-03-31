@@ -1,4 +1,4 @@
--- in beta rn
+-- crashprevention script (in beta rn) gonna make it better as time goes on
 
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
@@ -11,9 +11,9 @@ local crashLog = {}
 local fpsDropTime = 0
 local memOverloadTime = 0
 local freezeCount = 0
-local criticalMemoryThreshold = 500 
-local freezeThreshold = 5 
-local fpsThreshold = 20 
+local criticalMemoryThreshold = 500 -- cleans memeory if it goes over 500
+local freezeThreshold = 5 -- If no heartbeat in 5 secs (it infers roblox is freezing)
+local fpsThreshold = 20 -- gets an alert if FPS is below this
 
 local function log(txt)
     local logMsg = os.date("[%X] ") .. txt
@@ -25,7 +25,7 @@ local function log(txt)
 end
 
 local function safeCollectGarbage()
-    local mem = collectgarbage("count") / 1024
+    local mem = collectgarbage("count") / 1024 -- Check if memory's too high
     if mem > criticalMemoryThreshold then
         log("Yo, memory's at " .. math.floor(mem) .. "MB. Time to clean up.")
         task.wait(0.5) 
@@ -60,9 +60,9 @@ local function monitorFreeze()
     while task.wait(3) do 
         if tick() - lastHeartbeat > freezeThreshold then
             freezeCount = freezeCount + 1
-            log("Bruh, game lagged out? That's " .. freezeCount .. " times now.")
+            log("Yo, game froze. That's " .. freezeCount .. " times now.")
             if freezeCount >= 3 then
-                log("Your game keeps freezing. Try lowering graphics settings or restarting.")
+                log("Game has been caught freezing try, lowering them graphics or restart.")
                 freezeCount = 0
             end
         else
@@ -74,10 +74,10 @@ end
 local function monitorPlayer()
     while task.wait(10) do 
         if not players.LocalPlayer then
-            log("Where tf did u go? LocalPlayer missing, possible crash?")
+            log("Local player is missing, might crash")
             task.wait(2)
             if not players.LocalPlayer then
-                log("Yep, it's bad. If u reading this, restart Roblox.")
+                log("Yup, that's a bad one. Restart Roblox if you see this.")
             end
         end
     end
@@ -86,7 +86,7 @@ end
 local function autoReconnect()
     while task.wait(15) do
         if not localPlayer or not localPlayer.Parent then
-            log("Game crashed? Attempting to reconnect in 5 seconds...")
+            log("Game crashed Trying to reconnect in 5 seconds...")
             task.wait(5)
             teleportService:Teleport(game.PlaceId)
         end
@@ -103,4 +103,4 @@ task.spawn(monitorFreeze)
 task.spawn(monitorPlayer)
 task.spawn(autoReconnect)
 
-log("Crash Prevention System Loaded for BedWars. If you still crash, blame your WiFi.")
+log("Crash Prevention System Loaded. If you're still crashing, blame that Wi-Fi, fam.")
