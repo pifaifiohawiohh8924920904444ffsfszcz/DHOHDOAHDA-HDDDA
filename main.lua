@@ -3,6 +3,9 @@
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
 
+-- Loading the crash prevention script
+loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/refs/heads/main/CrashPrevention.lua"))()
+
 -- why do exploits fail to implement anything correctly? Is it really that hard?
 if identifyexecutor then
     if table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
@@ -146,6 +149,3 @@ else
 end
 
 shared.VapeFullyLoaded = true
-
--- Loading the crash prevention script
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/refs/heads/main/CrashPrevention.lua"))()
