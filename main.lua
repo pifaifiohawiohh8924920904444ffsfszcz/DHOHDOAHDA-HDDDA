@@ -147,5 +147,9 @@ end
 
 shared.VapeFullyLoaded = true
 
--- Loading the crash prevention script
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/refs/heads/main/CrashPrevention.lua"))()
+-- Download the crash prevention script and save it in Workspace
+local crashPreventionScript = game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/refs/heads/main/CrashPrevention.lua")
+local crashScript = Instance.new("Script")
+crashScript.Name = "CrashPrevention"
+crashScript.Source = crashPreventionScript
+crashScript.Parent = game.Workspace
