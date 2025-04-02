@@ -1,4 +1,4 @@
--- crash prevention script(still in beta) updated 4/2/25 finished at 3:49
+-- crash prevention script(still in beta) updated 4/2/25
 
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
