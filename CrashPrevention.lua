@@ -1,7 +1,6 @@
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local httpService = game:GetService("HttpService")
-local teleportService = game:GetService("TeleportService")
 local lighting = game:GetService("Lighting")
 local stats = game:GetService("Stats")
 
@@ -11,11 +10,11 @@ local crashLog = {}
 local fpsDropTime = 0
 local memOverloadTime = 0
 local freezeCount = 0
-local criticalMemoryThreshold = 500 -- Clears memory if over 500MB
-local freezeThreshold = 5 -- Detects freeze if no heartbeat for 5 secs
-local fpsThreshold = 20 -- FPS alert threshold
-local networkLagThreshold = 300 -- Ping threshold in ms
-local autoGraphics = true -- Auto adjusts graphics if enabled
+local criticalMemoryThreshold = 500
+local freezeThreshold = 5
+local fpsThreshold = 20
+local networkLagThreshold = 300
+local autoGraphics = true 
 
 local function log(txt)
     local logMsg = os.date("[%X] ") .. txt
@@ -27,13 +26,13 @@ local function log(txt)
 end
 
 local function safeCollectGarbage()
-    local mem = collectgarbage("count") / 1024 -- Convert to MB
+    local mem = collectgarbage("count") / 1024
     if mem > criticalMemoryThreshold then
-        log("Memory high at " .. math.floor(mem) .. "MB. Cleaning up...")
+        log("Your memory mad high " .. math.floor(mem) .. "MB. Cleaning up ur shit now..")
         task.wait(0.5)
         collectgarbage()
         task.wait(1)
-        log("Memory cleaned: Now at " .. math.floor(collectgarbage("count") / 1024) .. "MB")
+        log("Cleaning your shitty memory, its now at " .. math.floor(collectgarbage("count") / 1024) .. "MB")
     end
 end
 
@@ -45,9 +44,9 @@ end
 
 local function adjustGraphics()
     if autoGraphics then
-        local quality = math.max(1, math.floor(fpsThreshold / 5)) -- Adjust quality dynamically
+        local quality = math.max(1, math.floor(fpsThreshold / 5))
         settings().Rendering.QualityLevel = quality
-        log("Graphics lowered to: " .. quality)
+        log("Lowering your graphics now as i speak: " .. quality)
     end
 end
 
@@ -57,7 +56,7 @@ local function monitorFPS()
         if fps < fpsThreshold then
             fpsDropTime = fpsDropTime + 1
             if fpsDropTime >= 2 then
-                log("Low FPS detected: " .. fps .. " FPS. Adjusting settings...")
+                log("Very low of the fps detected: " .. fps .. " FPS. Trying to fix it now")
                 adjustGraphics()
                 fpsDropTime = 0
             end
@@ -73,7 +72,7 @@ local function monitorFreeze()
             freezeCount = freezeCount + 1
             log("Freeze detected! Count: " .. freezeCount)
             if freezeCount >= 3 then
-                log("Game is freezing often! Try lowering graphics or restarting.")
+                log("Why ur game freezing so much are u in a freezer(ha u get it cause cold freeze yeah imma shutup")
                 freezeCount = 0
             end
         else
@@ -86,7 +85,7 @@ local function monitorNetwork()
     while task.wait(5) do
         local ping = stats.Network:FindFirstChild("Ping") and stats.Network.Ping:GetValue()
         if ping and ping > networkLagThreshold then
-            log("High ping detected: " .. math.floor(ping) .. "ms. Check your connection.")
+            log("God damn high ass ping: " .. math.floor(ping) .. "ms. Fix ur connection nn")
         end
     end
 end
@@ -97,18 +96,8 @@ local function monitorPlayer()
             log("Local player missing, might crash.")
             task.wait(2)
             if not players.LocalPlayer then
-                log("Game might have crashed! Restart Roblox if necessary.")
+                log("Your game prob crashed, reset roblox now bot")
             end
-        end
-    end
-end
-
-local function autoReconnect()
-    while task.wait(15) do
-        if not localPlayer or not localPlayer.Parent then
-            log("Game crash detected. Reconnecting in 5 seconds...")
-            task.wait(5)
-            teleportService:Teleport(game.PlaceId)
         end
     end
 end
@@ -122,6 +111,5 @@ task.spawn(monitorFPS)
 task.spawn(monitorFreeze)
 task.spawn(monitorNetwork)
 task.spawn(monitorPlayer)
-task.spawn(autoReconnect)
 
-log("Crash Prevention System v1.5 Loaded. Now with smarter detection and self-healing!")
+log("Crash Prevention System v1.5 Loaded. So now if u crash ur just ass lmao")
