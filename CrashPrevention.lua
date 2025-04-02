@@ -26,10 +26,10 @@ local function loadPreviousLogs()
                 local success, result = pcall(function()
                     return httpService:JSONDecode(content)
                 end)
-                
+
                 if success and type(result) == "table" then
                     crashLog = result
-                    print("[Crash Helper] Loaded " .. #crashLog .. " previous log from before")
+
                 end
             end
         end
@@ -37,10 +37,12 @@ local function loadPreviousLogs()
 end
 
 local function log(txt)
-    local logMsg = os.date("[%X] ") .. txt
-    table.insert(crashLog, logMsg)
-    print("[Crash Helper] " .. txt)
-
+    local logEntry = {
+        Timestamp = os.date("[%Y-%m-%d %H:%M:%S]"),
+        Message = txt
+    }
+    table.insert(crashLog, logEntry)
+    print("[Crash Helper] " .. txt) -- Print the NEW log
     pcall(function()
         writefile("CrashLog.txt", httpService:JSONEncode(crashLog))
     end)
@@ -72,7 +74,7 @@ local function adjustGraphics()
         pcall(function()
             local currentQuality = settings().Rendering.QualityLevel
             local newQuality = math.max(1, math.floor(fpsThreshold / 5))
-            
+
             if newQuality < currentQuality then
                 settings().Rendering.QualityLevel = newQuality
                 log("Gonna lower your graphics too.. " .. newQuality)
@@ -84,19 +86,19 @@ end
 local function monitorFPS()
     local lastTime = tick()
     local frameCount = 0
-    
+
     runService.RenderStepped:Connect(function()
         if not isInitialized then return end
-        
+
         frameCount = frameCount + 1
         local currentTime = tick()
         local elapsed = currentTime - lastTime
-        
+
         if elapsed >= 3 then
             local fps = math.floor(frameCount / elapsed)
             frameCount = 0
             lastTime = currentTime
-            
+
             if fps < fpsThreshold then
                 fpsDropTime = fpsDropTime + 1
                 if fpsDropTime >= 2 then
@@ -114,18 +116,18 @@ end
 local function monitorFreeze()
     while task.wait(3) do
         if not isInitialized then return end
-        
+
         if tick() - lastHeartbeat > freezeThreshold then
             freezeCount = freezeCount + 1
             log("Oop your game froze " .. freezeCount .. "times")
             if freezeCount >= 3 then
                 log("Idk why your game your game crashing so much, gonna be mad unstable now..")
-                
+
                 pcall(function()
                     collectgarbage("collect")
                     adjustGraphics()
                 end)
-                
+
                 freezeCount = 0
             end
         else
@@ -137,7 +139,7 @@ end
 local function monitorNetwork()
     while task.wait(5) do
         if not isInitialized then return end
-        
+
         pcall(function()
             local ping = stats.Network:FindFirstChild("Ping") and stats.Network.Ping:GetValue()
             if ping and ping > networkLagThreshold then
@@ -150,7 +152,7 @@ end
 local function monitorPlayer()
     while task.wait(10) do
         if not isInitialized then return end
-        
+
         if not players.LocalPlayer then
             log("Can now find LocalPlayer")
             task.wait(2)
@@ -163,19 +165,19 @@ end
 
 local function initCrashPrevention()
     pcall(function()
-        loadPreviousLogs()
+        loadPreviousLogs() 
 
         runService.Heartbeat:Connect(function()
             lastHeartbeat = tick()
         end)
-        
+
         task.spawn(monitorMemory)
         task.spawn(monitorFreeze)
         task.spawn(monitorNetwork)
         task.spawn(monitorPlayer)
 
         monitorFPS()
-        
+
         isInitialized = true
         log("Crash Prevention Script Loaded.. If you crash your comp just ass icl")
     end)
