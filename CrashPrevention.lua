@@ -186,4 +186,4 @@ task.spawn(monitorPlayer)
 task.spawn(preventScriptLag)
 task.spawn(disableHeavyParts)
 
-log("Crash Prevention v3.0 Loaded - The Ultimate Performance & Stability Booster!")
+log("Crash Prevention v3.0 Loaded, if ur crashing ur just ass")
