@@ -1,41 +1,21 @@
---[[
-    ╔═══════════════════════════════════════════════════════════════════════════╗
-    ║                                                                           ║
-    ║                      CRASH PREVENTION SCRIPT                              ║
-    ║                                                                           ║
-    ║  Version: 2.1.0                                                           ║
-    ║  Last Updated: 2024-04-03                                                 ║
-    ║  GitHub: https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/blob/main/CrashPrevention.lua                ║
-    ║                                                                           ║
-    ║  CHANGELOG:                                                               ║
-    ║  • Added version tracking and update display                              ║
-    ║  • Optimized monitoring to reduce game lag                                ║
-    ║  • Improved memory management                                             ║
-    ║  • Improved logging system                                                ║
-    ║                                                                           ║
-    ╚═══════════════════════════════════════════════════════════════════════════╝
-]]
+-- script still in beta just updated tho 4/2/25
 
--- Script Configuration
 local CONFIG = {
     VERSION = "2.1.0",
     UPDATE_DATE = "2024-04-03",
     LOG_FILE = "CrashLog.json",
     VERSION_FILE = "CrashPrevVersion.txt",
     GITHUB_URL = "https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/blob/main/CrashPrevention.lua",
-    
-    -- Performance thresholds
+
     CRITICAL_MEMORY_MB = 500,
     FREEZE_THRESHOLD_SEC = 5,
     FPS_THRESHOLD = 20,
     NETWORK_LAG_THRESHOLD_MS = 300,
-    
-    -- Features
+
     AUTO_GRAPHICS = true,
     SHOW_NOTIFICATIONS = true,
     LOG_TO_FILE = true,
-    
-    -- Performance settings
+
     MEMORY_CHECK_INTERVAL = 15,    -- seconds
     FREEZE_CHECK_INTERVAL = 5,     -- seconds
     NETWORK_CHECK_INTERVAL = 10,   -- seconds
@@ -43,14 +23,12 @@ local CONFIG = {
     MAX_LOG_ENTRIES = 100
 }
 
--- Services
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local Stats = game:GetService("Stats")
 local StarterGui = game:GetService("StarterGui")
 
--- Variables
 local LocalPlayer = Players.LocalPlayer
 local LastHeartbeat = tick()
 local CrashLog = {}
@@ -61,17 +39,14 @@ local StartTime = os.time()
 local LastVersionSeen = ""
 local MonitoringTasks = {}
 
--- Utility Functions
 local function CheckForUpdate()
     pcall(function()
         if isfile(CONFIG.VERSION_FILE) then
             LastVersionSeen = readfile(CONFIG.VERSION_FILE)
         end
-        
-        -- Save current version
+
         writefile(CONFIG.VERSION_FILE, CONFIG.VERSION)
-        
-        -- Check if this is a new version
+
         return LastVersionSeen ~= CONFIG.VERSION
     end)
     
@@ -135,8 +110,7 @@ local function LoadPreviousLogs()
                 end)
                 if success and type(result) == "table" then
                     CrashLog = result
-                    
-                    -- Trim log if it's too large
+                        
                     if #CrashLog > CONFIG.MAX_LOG_ENTRIES then
                         local newLog = {}
                         for i = #CrashLog - CONFIG.MAX_LOG_ENTRIES + 1, #CrashLog do
@@ -188,8 +162,7 @@ local function Log(category, message, level)
     }
     
     table.insert(CrashLog, logEntry)
-    
-    -- Format console output with category and level
+
     local prefix = "[Crash Helper]"
     local formattedMessage = string.format("%s [%s-%s] %s", 
         prefix,
@@ -199,26 +172,22 @@ local function Log(category, message, level)
     )
     
     print(formattedMessage)
-    
-    -- Show notification for warnings and errors
+
     if level == "WARNING" or level == "ERROR" then
         NotifyUser(message, level == "ERROR" and 8 or 5)
     end
-    
-    -- Save logs periodically (not on every log to reduce file operations)
+
     if #CrashLog % 5 == 0 then
         SaveLogs()
     end
 end
 
--- Core Functionality
 local function SafeCollectGarbage()
     pcall(function()
         local mem = collectgarbage("count") / 1024
         if mem > CONFIG.CRITICAL_MEMORY_MB then
             Log("Memory", "High memory usage detected: " .. FormatMemory(mem), "WARNING")
-            
-            -- Delay collection slightly to not cause stutters
+
             task.delay(0.5, function()
                 collectgarbage("collect")
                 
@@ -262,7 +231,6 @@ local function GetSystemInfo()
     return info
 end
 
--- Optimized Monitoring Functions
 local function CreateMonitorTask(name, interval, callback)
     local task = {
         Name = name,
@@ -279,17 +247,14 @@ end
 local function RunMonitoringTasks()
     RunService.Heartbeat:Connect(function()
         if not IsInitialized then return end
-        
-        -- Update heartbeat timestamp (for freeze detection)
+
         LastHeartbeat = tick()
-        
-        -- Run tasks that are due
+
         local currentTime = tick()
         for _, task in ipairs(MonitoringTasks) do
             if currentTime - task.LastRun >= task.Interval and not task.IsRunning then
                 task.IsRunning = true
-                
-                -- Run the task in a protected call
+
                 task.LastRun = currentTime
                 task.Callback(function()
                     task.IsRunning = false
@@ -299,7 +264,6 @@ local function RunMonitoringTasks()
     end)
 end
 
--- Monitoring Functions
 local function SetupMemoryMonitoring()
     CreateMonitorTask("MemoryMonitor", CONFIG.MEMORY_CHECK_INTERVAL, function(done)
         SafeCollectGarbage()
@@ -353,7 +317,7 @@ local function SetupFreezeMonitoring()
                 end)
             end
         else
-            FreezeCount = math.max(0, FreezeCount - 0.5) -- Gradually reduce freeze count if stable
+            FreezeCount = math.max(0, FreezeCount - 0.5) 
         end
         
         done()
@@ -389,7 +353,6 @@ local function SetupPlayerMonitoring()
     end)
 end
 
--- Commands (for debugging and control)
 local function RegisterCommands()
     local function ProcessCommand(cmd)
         local parts = {}
@@ -424,63 +387,52 @@ local function RegisterCommands()
     end)
 end
 
--- Initialization
 local function InitCrashPrevention()
     pcall(function()
-        -- Check for updates and display version info
+
         local isNewUpdate = CheckForUpdate()
         DisplayUpdateMessage(isNewUpdate)
-        
-        -- Load previous logs
+
         LoadPreviousLogs()
-        
-        -- Log session start with system info
+
         local sysInfo = GetSystemInfo()
         Log("System", "Session started in game: " .. (sysInfo.GameName or "Unknown"), "INFO")
         Log("System", "Memory: " .. sysInfo.MemoryUsage .. ", FPS: " .. (sysInfo.FPS or "Unknown"), "INFO")
-        
-        -- Set up monitoring systems
+
         SetupMemoryMonitoring()
         SetupFreezeMonitoring()
         SetupNetworkMonitoring()
         SetupPlayerMonitoring()
         SetupFPSMonitoring()
-        
-        -- Start the monitoring engine
+
         RunMonitoringTasks()
-        
-        -- Register chat commands
+
         RegisterCommands()
         
         IsInitialized = true
-        Log("System", "Crash Prevention v" .. CONFIG.VERSION .. " initialized successfully", "INFO")
+        Log("System", "Crash Prevention v" .. CONFIG.VERSION .. " loaded succesfully", "INFO")
         
         if isNewUpdate then
-            NotifyUser("Crash Prevention v" .. CONFIG.VERSION .. " activated!", 5)
+            NotifyUser("Crash Prevention v" .. CONFIG.VERSION .. " working!", 5)
         else
-            NotifyUser("Crash Prevention active", 3)
+            NotifyUser("CrashPreventionScript Working now..", 3)
         end
     end)
 end
 
--- Performance optimization for script shutdown
 local function CleanupOnShutdown()
     pcall(function()
         if IsInitialized then
             Log("System", "Session ending, final save", "INFO")
             SaveLogs()
-            
-            -- Clear monitoring tasks
+
             MonitoringTasks = {}
-            
-            -- Force garbage collection
+
             collectgarbage("collect")
         end
     end)
 end
 
--- Run the script
 InitCrashPrevention()
 
--- Save logs when script is unloaded
 game:BindToClose(CleanupOnShutdown)
