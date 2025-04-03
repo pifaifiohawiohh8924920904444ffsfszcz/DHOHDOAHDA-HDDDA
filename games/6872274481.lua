@@ -1350,8 +1350,8 @@ run(function()
 		Name = 'CPS',
 		Min = 1,
 		Max = 17,
-		DefaultMin = 17,
-		DefaultMax = 17
+		DefaultMin = 7,
+		DefaultMax = 7
 	})
 	AutoClicker:CreateToggle({
 		Name = 'Place Blocks',
@@ -1365,9 +1365,9 @@ run(function()
 	BlockCPS = AutoClicker:CreateTwoSlider({
 		Name = 'Block CPS',
 		Min = 1,
-		Max = 25,
-		DefaultMin = 25,
-		DefaultMax = 25,
+		Max = 20,
+		DefaultMin = 12,
+		DefaultMax = 12,
 		Darker = true
 	})
 end)
@@ -8589,202 +8589,4 @@ run(function()
 		Name = 'Effects',
 		List = WinEffectName
 	})
-end)
-
-run(function()
-    local TargetPart
-    local Targets
-    local FOV
-    local OtherProjectiles
-    local HideCursor
-    local rayCheck = RaycastParams.new()
-    rayCheck.FilterType = Enum.RaycastFilterType.Include
-    rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
-    local old
- 
-    -- Perfect side movement values
-    local PREDICTION_MULTIPLIER = 0.32
-    local HORIZONTAL_DAMPENING = 0.28
-    local VERTICAL_MULTIPLIER = 0.22
-    local MAX_Y_PREDICTION = 6
-    local MIN_Y_PREDICTION = -4
-    local SMOOTHING_FACTOR = 0.15
-    local SIDE_MOVEMENT_COMP = 0.25
- 
-    local lastPrediction = {}
-    local lastVelocity = {}
-    local lastPosition = {}
-    local originalMouseIcon = game:GetService("UserInputService").MouseIcon
- 
-    local function updateSideMovement(plr, pos)
-        if not lastPosition[plr] then
-            lastPosition[plr] = pos
-            return Vector3.new()
-        end
- 
-        local movement = (pos - lastPosition[plr])
-        local sideComp = movement * SIDE_MOVEMENT_COMP
-        lastPosition[plr] = pos
-        return sideComp
-    end
- 
-    local function calculatePrecisePrediction(plr, pos, velocity)
-        local targetPos = plr[TargetPart.Value].Position
-        local sideMovement = updateSideMovement(plr, targetPos)
-        local distance = (targetPos - pos).Magnitude
- 
-        -- Enhanced side movement prediction
-        local lateralVelocity = Vector3.new(velocity.X, 0, velocity.Z)
-        local lateralSpeed = lateralVelocity.Magnitude
-        local sideCompensation = sideMovement * (1 + lateralSpeed * 0.01)
- 
-        -- Calculate final position with side compensation
-        return targetPos + 
-               (velocity * PREDICTION_MULTIPLIER) + 
-               sideCompensation
-    end
- 
-    local ProjectileAimbot = vape.Categories.Blatant:CreateModule({
-        Name = 'CroboProjectileAimbot',
-        Function = function(callback)
-            if callback then
-                if HideCursor.Enabled then
-                    game:GetService("UserInputService").MouseIcon = ""
-                end
-                old = bedwars.ProjectileController.calculateImportantLaunchValues
-                bedwars.ProjectileController.calculateImportantLaunchValues = function(...)
-                    local self, projmeta, worldmeta, origin, shootpos = ...
-                    local plr = entitylib.EntityMouse({
-                        Part = 'RootPart',
-                        Range = FOV.Value,
-                        Players = Targets.Players.Enabled,
-                        NPCs = Targets.NPCs.Enabled,
-                        Wallcheck = Targets.Walls.Enabled,
-                        Origin = entitylib.isAlive and (shootpos or entitylib.character.RootPart.Position) or Vector3.zero
-                    })
- 
-                    if plr then
-                        local pos = shootpos or self:getLaunchPosition(origin)
-                        if not pos then return old(...) end
-                        if (not OtherProjectiles.Enabled) and not projmeta.projectile:find('arrow') then
-                            return old(...)
-                        end
- 
-                        local meta = projmeta:getProjectileMeta()
-                        local lifetime = (worldmeta and meta.predictionLifetimeSec or meta.lifetimeSec or 3)
-                        local gravity = (meta.gravitationalAcceleration or 196.2) * projmeta.gravityMultiplier
-                        local projSpeed = (meta.launchVelocity or 100)
-                        local offsetpos = pos + (projmeta.projectile == 'owl_projectile' and Vector3.zero or projmeta.fromPositionOffset)
- 
-                        local targetVelocity = plr[TargetPart.Value].Velocity
- 
-                        local horizontalVel = Vector3.new(
-                            targetVelocity.X * HORIZONTAL_DAMPENING,
-                            0,
-                            targetVelocity.Z * HORIZONTAL_DAMPENING
-                        )
- 
-                        local verticalVel = Vector3.new(0,
-                            math.clamp(
-                                targetVelocity.Y * VERTICAL_MULTIPLIER,
-                                MIN_Y_PREDICTION,
-                                MAX_Y_PREDICTION
-                            ),
-                            0
-                        )
- 
-                        local predictedPos = calculatePrecisePrediction(plr, pos, targetVelocity)
- 
-                        if not lastPrediction[plr] then
-                            lastPrediction[plr] = predictedPos
-                        end
- 
-                        local smoothedPrediction = lastPrediction[plr]:Lerp(predictedPos, SMOOTHING_FACTOR)
-                        lastPrediction[plr] = smoothedPrediction
- 
-                        local balloons = plr.Character:GetAttribute('InflatedBalloons')
-                        local playerGravity = workspace.Gravity
- 
-                        if balloons and balloons > 0 then
-                            playerGravity = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
-                            verticalVel = verticalVel * 0.7
-                        end
- 
-                        if plr.Character.PrimaryPart:FindFirstChild('rbxassetid://8200754399') then
-                            playerGravity = 6
-                        end
- 
-                        local newlook = CFrame.new(offsetpos, smoothedPrediction) * 
-                            CFrame.new(projmeta.projectile == 'owl_projectile' and Vector3.zero or 
-                            Vector3.new(bedwars.BowConstantsTable.RelX, bedwars.BowConstantsTable.RelY, bedwars.BowConstantsTable.RelZ))
- 
-                        local calc = prediction.SolveTrajectory(
-                            newlook.p,
-                            projSpeed,
-                            gravity,
-                            smoothedPrediction,
-                            projmeta.projectile == 'telepearl' and Vector3.zero or horizontalVel,
-                            playerGravity,
-                            plr.HipHeight,
-                            plr.Jumping and 20 or nil,
-                            rayCheck
-                        )
- 
-                        if calc then
-                            targetinfo.Targets[plr] = tick() + 1
-                            return {
-                                initialVelocity = CFrame.new(newlook.Position, calc).LookVector * projSpeed,
-                                positionFrom = offsetpos,
-                                deltaT = lifetime,
-                                gravitationalAcceleration = gravity,
-                                drawDurationSeconds = 5
-                            }
-                        end
-                    end
-                    return old(...)
-                end
-            else
-                bedwars.ProjectileController.calculateImportantLaunchValues = old
-                lastPrediction = {}
-                lastVelocity = {}
-                lastPosition = {}
-                game:GetService("UserInputService").MouseIcon = originalMouseIcon
-            end
-        end,
-        Tooltip = 'Perfect side movement projectile aimbot'
-    })
- 
-    Targets = ProjectileAimbot:CreateTargets({
-        Players = true,
-        Walls = true
-    })
- 
-    TargetPart = ProjectileAimbot:CreateDropdown({
-        Name = 'Part',
-        List = {'RootPart', 'Head'}
-    })
- 
-    FOV = ProjectileAimbot:CreateSlider({
-        Name = 'FOV',
-        Min = 1,
-        Max = 1000,
-        Default = 1000
-    })
- 
-    OtherProjectiles = ProjectileAimbot:CreateToggle({
-        Name = 'Other Projectiles',
-        Default = true
-    })
- 
-    HideCursor = ProjectileAimbot:CreateToggle({
-        Name = 'Hide Cursor',
-        Default = false,
-        Function = function(callback)
-            if callback then
-                game:GetService("UserInputService").MouseIcon = ""
-            else
-                game:GetService("UserInputService").MouseIcon = originalMouseIcon
-            end
-        end
-    })
 end)
