@@ -3066,37 +3066,28 @@ run(function()
 end)
 
 run(function()
-    local TargetPart
-    local Targets
-    local FOV
-    local OtherProjectiles
-    local rayCheck = RaycastParams.new()
-    rayCheck.FilterType = Enum.RaycastFilterType.Include
-    rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
+local TargetPart
+local Targets
+local FOV
+local OtherProjectiles
+local rayCheck = RaycastParams.new()
+rayCheck.FilterType = Enum.RaycastFilterType.Include
+rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
 
     local old
 
+    -- Fixed Ping Function
     local function getPing()
         local stats = game:GetService("Stats")
         local networkStats = stats and stats.Network
         if networkStats then
             for _, stat in pairs(networkStats:GetChildren()) do
                 if stat.Name:lower():find("ping") then
-                    return stat:GetValue() / 1000
+                    return stat:GetValue() / 1000 -- Convert from milliseconds to seconds
                 end
             end
         end
-        return 0
-    end
-
-    -- Slight randomizer if needed
-    local function randomizeVec(vec, amount)
-        local offset = Vector3.new(
-            math.random(-amount, amount),
-            math.random(-amount, amount),
-            math.random(-amount, amount)
-        ) * 0.01
-        return vec + offset
+        return 0 -- Default to zero if unavailable
     end
 
     local ProjectileAimbot = vape.Categories.Blatant:CreateModule({
@@ -3109,7 +3100,10 @@ run(function()
                 bedwars.ProjectileController.calculateImportantLaunchValues = function(...)
                     local self, projmeta, worldmeta, origin, shootpos = ...
 
+                    -- Get ping in seconds
                     local pingTime = getPing()
+
+                    -- Optimized Target Selection with Ping Compensation
                     local plr = entitylib.EntityMouse({
                         Part = TargetPart.Value,
                         Range = FOV.Value,
@@ -3119,23 +3113,24 @@ run(function()
                         Origin = entitylib.isAlive and (shootpos or entitylib.character.RootPart.Position) or Vector3.zero
                     })
 
-                    if not plr or not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
-                        return old(...)
-                    end
+                    if not plr then return old(...) end
 
                     local pos = shootpos or self:getLaunchPosition(origin)
                     if not pos then return old(...) end
 
+                    -- Projectile Type Filtering
                     if not OtherProjectiles.Enabled and not projmeta.projectile:find('arrow') then
                         return old(...)
                     end
 
+                    -- Get Projectile Metadata
                     local meta = projmeta:getProjectileMeta()
                     local lifetime = meta.lifetimeSec or 3
                     local gravity = (meta.gravitationalAcceleration or 196.2) * projmeta.gravityMultiplier
                     local projSpeed = meta.launchVelocity or 100
                     local offsetPos = pos + (projmeta.projectile == 'owl_projectile' and Vector3.zero or projmeta.fromPositionOffset)
 
+                    -- Adjust for Gravity and Balloons
                     local playerGravity = workspace.Gravity
                     local balloons = plr.Character:GetAttribute('InflatedBalloons') or 0
                     if balloons > 0 then
@@ -3145,32 +3140,11 @@ run(function()
                         playerGravity = 6
                     end
 
-                    local useHead = (plr.Character.Humanoid.MoveDirection.Magnitude < 1)
-                    local partName = useHead and "Head" or TargetPart.Value
-                    local targetPart = plr.Character:FindFirstChild(partName)
+                    -- More Accurate Target Position Prediction (Using Ping)
+                    local targetVelocity = plr[TargetPart.Value].Velocity
+                    local predictedPosition = plr[TargetPart.Value].Position + (targetVelocity * pingTime)
 
-                    if not targetPart then return old(...) end
-
-                    local distance = (offsetPos - targetPart.Position).Magnitude
-                    local travelTime = distance / projSpeed
-                    local totalPredictionTime = pingTime + travelTime
-
-                    local targetVelocity = targetPart.Velocity
-                    local predictedPosition = targetPart.Position + (targetVelocity * totalPredictionTime)
-
-                    -- Optional smoothing
-                    predictedPosition = targetPart.Position:Lerp(predictedPosition, 0.85)
-
-                    -- Minimal random offset to keep it less detectable
-                    local randomness = (plr.Character.Humanoid.MoveDirection.Magnitude < 1) and 1 or 2
-                    predictedPosition = randomizeVec(predictedPosition, randomness)
-
-                    -- Optional raycast check to avoid wall hits
-                    local rayResult = workspace:Raycast(offsetPos, (predictedPosition - offsetPos).Unit * distance, rayCheck)
-                    if rayResult and rayResult.Instance and not rayResult.Instance:IsDescendantOf(plr.Character) then
-                        return old(...)
-                    end
-
+                    -- Improved CFrame Calculation with LookAt
                     local lookAt = CFrame.lookAt(offsetPos, predictedPosition)
                     local newLook = lookAt * CFrame.new(
                         bedwars.BowConstantsTable.RelX,
@@ -3178,31 +3152,24 @@ run(function()
                         bedwars.BowConstantsTable.RelZ
                     )
 
+                    -- Optimized Trajectory Prediction
                     local calc = prediction.SolveTrajectory(
                         newLook.Position,
                         projSpeed,
                         gravity,
-                        predictedPosition,
+                        predictedPosition, -- Use predicted position
                         targetVelocity,
                         playerGravity,
                         plr.HipHeight,
-                        targetVelocity.Y > 0 and targetVelocity.Y or nil,
+                        plr.Jumping and 42.6 or nil,
                         rayCheck
                     )
 
                     if calc then
                         targetinfo.Targets[plr] = tick() + 1
+
                         return {
                             initialVelocity = CFrame.new(newLook.Position, calc).LookVector * projSpeed,
-                            positionFrom = offsetPos,
-                            deltaT = lifetime,
-                            gravitationalAcceleration = gravity,
-                            drawDurationSeconds = 5
-                        }
-                    else
-                        -- Fallback aim straight at predicted pos
-                        return {
-                            initialVelocity = (predictedPosition - offsetPos).Unit * projSpeed,
                             positionFrom = offsetPos,
                             deltaT = lifetime,
                             gravitationalAcceleration = gravity,
@@ -3212,13 +3179,14 @@ run(function()
 
                     return old(...)
                 end
+
             else
                 bedwars.ProjectileController.calculateImportantLaunchValues = old
             end
         end
     })
 
-    -- UI
+    -- UI Settings
     Targets = ProjectileAimbot:CreateTargets({
         Players = true,
         Walls = true,
