@@ -3066,28 +3066,37 @@ run(function()
 end)
 
 run(function()
-local TargetPart
-local Targets
-local FOV
-local OtherProjectiles
-local rayCheck = RaycastParams.new()
-rayCheck.FilterType = Enum.RaycastFilterType.Include
-rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
+    local TargetPart
+    local Targets
+    local FOV
+    local OtherProjectiles
+    local rayCheck = RaycastParams.new()
+    rayCheck.FilterType = Enum.RaycastFilterType.Include
+    rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
 
     local old
 
-    -- Fixed Ping Function
     local function getPing()
         local stats = game:GetService("Stats")
         local networkStats = stats and stats.Network
         if networkStats then
             for _, stat in pairs(networkStats:GetChildren()) do
                 if stat.Name:lower():find("ping") then
-                    return stat:GetValue() / 1000 -- Convert from milliseconds to seconds
+                    return stat:GetValue() / 1000
                 end
             end
         end
-        return 0 -- Default to zero if unavailable
+        return 0
+    end
+
+    -- Optional Humanizer (small aim randomness)
+    local function randomizeVec(vec, amount)
+        local offset = Vector3.new(
+            math.random(-amount, amount),
+            math.random(-amount, amount),
+            math.random(-amount, amount)
+        ) * 0.01
+        return vec + offset
     end
 
     local ProjectileAimbot = vape.Categories.Blatant:CreateModule({
@@ -3100,10 +3109,7 @@ rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
                 bedwars.ProjectileController.calculateImportantLaunchValues = function(...)
                     local self, projmeta, worldmeta, origin, shootpos = ...
 
-                    -- Get ping in seconds
                     local pingTime = getPing()
-
-                    -- Optimized Target Selection with Ping Compensation
                     local plr = entitylib.EntityMouse({
                         Part = TargetPart.Value,
                         Range = FOV.Value,
@@ -3113,24 +3119,27 @@ rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
                         Origin = entitylib.isAlive and (shootpos or entitylib.character.RootPart.Position) or Vector3.zero
                     })
 
-                    if not plr then return old(...) end
+                    if not plr or not plr.Character or not plr.Character:FindFirstChild("Humanoid") then
+                        return old(...)
+                    end
+
+                    if plr.Character.Humanoid.Health <= 0 then
+                        return old(...)
+                    end
 
                     local pos = shootpos or self:getLaunchPosition(origin)
                     if not pos then return old(...) end
 
-                    -- Projectile Type Filtering
                     if not OtherProjectiles.Enabled and not projmeta.projectile:find('arrow') then
                         return old(...)
                     end
 
-                    -- Get Projectile Metadata
                     local meta = projmeta:getProjectileMeta()
                     local lifetime = meta.lifetimeSec or 3
                     local gravity = (meta.gravitationalAcceleration or 196.2) * projmeta.gravityMultiplier
                     local projSpeed = meta.launchVelocity or 100
                     local offsetPos = pos + (projmeta.projectile == 'owl_projectile' and Vector3.zero or projmeta.fromPositionOffset)
 
-                    -- Adjust for Gravity and Balloons
                     local playerGravity = workspace.Gravity
                     local balloons = plr.Character:GetAttribute('InflatedBalloons') or 0
                     if balloons > 0 then
@@ -3140,11 +3149,21 @@ rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
                         playerGravity = 6
                     end
 
-                    -- More Accurate Target Position Prediction (Using Ping)
-                    local targetVelocity = plr[TargetPart.Value].Velocity
-                    local predictedPosition = plr[TargetPart.Value].Position + (targetVelocity * pingTime)
+                    local useHead = (plr.Character.Humanoid.MoveDirection.Magnitude < 1)
+                    local partName = useHead and "Head" or TargetPart.Value
+                    local targetPart = plr.Character:FindFirstChild(partName)
 
-                    -- Improved CFrame Calculation with LookAt
+                    if not targetPart then return old(...) end
+
+                    local distance = (offsetPos - targetPart.Position).Magnitude
+                    local travelTime = distance / projSpeed
+                    local totalPredictionTime = pingTime + travelTime
+                    local targetVelocity = targetPart.Velocity
+                    local predictedPosition = targetPart.Position + (targetVelocity * totalPredictionTime)
+                    predictedPosition = randomizeVec(predictedPosition, 4) -- Slight random offset
+
+                    local verticalVelocity = targetVelocity.Y > 0 and targetVelocity.Y or nil
+
                     local lookAt = CFrame.lookAt(offsetPos, predictedPosition)
                     local newLook = lookAt * CFrame.new(
                         bedwars.BowConstantsTable.RelX,
@@ -3152,22 +3171,20 @@ rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
                         bedwars.BowConstantsTable.RelZ
                     )
 
-                    -- Optimized Trajectory Prediction
                     local calc = prediction.SolveTrajectory(
                         newLook.Position,
                         projSpeed,
                         gravity,
-                        predictedPosition, -- Use predicted position
+                        predictedPosition,
                         targetVelocity,
                         playerGravity,
                         plr.HipHeight,
-                        plr.Jumping and 42.6 or nil,
+                        verticalVelocity,
                         rayCheck
                     )
 
                     if calc then
                         targetinfo.Targets[plr] = tick() + 1
-
                         return {
                             initialVelocity = CFrame.new(newLook.Position, calc).LookVector * projSpeed,
                             positionFrom = offsetPos,
