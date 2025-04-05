@@ -3089,7 +3089,7 @@ run(function()
         return 0
     end
 
-    -- Optional Humanizer (small aim randomness)
+    -- Slight randomizer if needed
     local function randomizeVec(vec, amount)
         local offset = Vector3.new(
             math.random(-amount, amount),
@@ -3119,11 +3119,7 @@ run(function()
                         Origin = entitylib.isAlive and (shootpos or entitylib.character.RootPart.Position) or Vector3.zero
                     })
 
-                    if not plr or not plr.Character or not plr.Character:FindFirstChild("Humanoid") then
-                        return old(...)
-                    end
-
-                    if plr.Character.Humanoid.Health <= 0 then
+                    if not plr or not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
                         return old(...)
                     end
 
@@ -3158,11 +3154,22 @@ run(function()
                     local distance = (offsetPos - targetPart.Position).Magnitude
                     local travelTime = distance / projSpeed
                     local totalPredictionTime = pingTime + travelTime
+
                     local targetVelocity = targetPart.Velocity
                     local predictedPosition = targetPart.Position + (targetVelocity * totalPredictionTime)
-                    predictedPosition = randomizeVec(predictedPosition, 4) -- Slight random offset
 
-                    local verticalVelocity = targetVelocity.Y > 0 and targetVelocity.Y or nil
+                    -- Optional smoothing
+                    predictedPosition = targetPart.Position:Lerp(predictedPosition, 0.85)
+
+                    -- Minimal random offset to keep it less detectable
+                    local randomness = (plr.Character.Humanoid.MoveDirection.Magnitude < 1) and 1 or 2
+                    predictedPosition = randomizeVec(predictedPosition, randomness)
+
+                    -- Optional raycast check to avoid wall hits
+                    local rayResult = workspace:Raycast(offsetPos, (predictedPosition - offsetPos).Unit * distance, rayCheck)
+                    if rayResult and rayResult.Instance and not rayResult.Instance:IsDescendantOf(plr.Character) then
+                        return old(...)
+                    end
 
                     local lookAt = CFrame.lookAt(offsetPos, predictedPosition)
                     local newLook = lookAt * CFrame.new(
@@ -3179,7 +3186,7 @@ run(function()
                         targetVelocity,
                         playerGravity,
                         plr.HipHeight,
-                        verticalVelocity,
+                        targetVelocity.Y > 0 and targetVelocity.Y or nil,
                         rayCheck
                     )
 
@@ -3192,18 +3199,26 @@ run(function()
                             gravitationalAcceleration = gravity,
                             drawDurationSeconds = 5
                         }
+                    else
+                        -- Fallback aim straight at predicted pos
+                        return {
+                            initialVelocity = (predictedPosition - offsetPos).Unit * projSpeed,
+                            positionFrom = offsetPos,
+                            deltaT = lifetime,
+                            gravitationalAcceleration = gravity,
+                            drawDurationSeconds = 5
+                        }
                     end
 
                     return old(...)
                 end
-
             else
                 bedwars.ProjectileController.calculateImportantLaunchValues = old
             end
         end
     })
 
-    -- UI Settings
+    -- UI
     Targets = ProjectileAimbot:CreateTargets({
         Players = true,
         Walls = true,
