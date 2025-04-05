@@ -1406,8 +1406,8 @@ run(function()
     Value = Reach:CreateSlider({
         Name = 'Range',
         Min = 0,
-        Max = 30,
-        Default = 30,
+        Max = 22,
+        Default = 22,
         Function = function(val)
             if Reach.Enabled then
                 bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = val + 10
@@ -2495,8 +2495,8 @@ run(function()
 	Range = Killaura:CreateSlider({
 		Name = 'Attack range',
 		Min = 1,
-		Max = 18,
-		Default = 18,
+		Max = 23,
+		Default = 23,
 		Suffix = function(val) 
 			return val == 1 and 'stud' or 'studs' 
 		end
