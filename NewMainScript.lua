@@ -3,7 +3,7 @@ local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
 local owners = {
-    ["3088639421"] = true,
+    ["7998668127"] = true,
     ["1693751684"] = true,
     ["1065346704"] = true
 }
