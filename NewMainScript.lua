@@ -2,14 +2,6 @@ local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistchec
 local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
-local owners = {
-    ["7998668127"] = true,
-    ["1693751684"] = true,
-    ["1065346704"] = true
-}
-
-local isOwner = owners[userId]
-
 local function getWhitelist()
     local success, response = pcall(function()
         return game:HttpGet(whitelist_url)
@@ -27,27 +19,8 @@ local function getWhitelist()
     return nil
 end
 
-local function notifyOwners()
-    if not isOwner then
-        for _, plr in pairs(game.Players:GetPlayers()) do
-            local plrId = tostring(plr.UserId)
-            if owners[plrId] then
-                print("[INFO] " .. player.Name .. " has injected the script.")
-                break
-            end
-        end
-    end
-end
-
 local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
-    if game:IsLoaded() then
-        notifyOwners()
-    else
-        game.Loaded:Wait()
-        notifyOwners()
-    end
-
     local isfile = isfile or function(file)
         local suc, res = pcall(function() return readfile(file) end)
         return suc and res ~= nil and res ~= ''
