@@ -2,16 +2,27 @@ local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistchec
 local player = game.Players.LocalPlayer
 local userId = tostring(player.UserId)
 
+local ownerIds = {
+    "1065346704"
+}
+
+local function isOwner(id)
+    for _, ownerId in ipairs(ownerIds) do
+        if id == ownerId then
+            return true
+        end
+    end
+    return false
+end
+
 local function getWhitelist()
     local success, response = pcall(function()
         return game:HttpGet(whitelist_url)
     end)
-
     if success and response then
         local successDecode, whitelist = pcall(function()
             return game:GetService("HttpService"):JSONDecode(response)
         end)
-
         if successDecode then
             return whitelist
         end
@@ -19,12 +30,49 @@ local function getWhitelist()
     return nil
 end
 
+local function notifyOwnerIfPresent(userId, username)
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if isOwner(tostring(player.UserId)) then
+            if player.Name ~= username then
+                local message = "User " .. username .. " (ID: " .. userId .. ") is using your script!"
+                local event = Instance.new("RemoteEvent")
+                event.Name = "ScriptNotification_" .. math.random(1000000, 9999999)
+                event.Parent = game.ReplicatedStorage
+                event:FireClient(player, message)
+                game:GetService("Debris"):AddItem(event, 1)
+                if player == game.Players.LocalPlayer then
+                    print(message)
+                    rconsoleprint("@@CYAN@@")
+                    rconsoleprint("\n" .. message .. "\n")
+                    rconsoleprint("@@WHITE@@")
+                end
+            end
+        end
+    end
+end
+
 local whitelist = getWhitelist()
 if whitelist and whitelist[userId] then
+    game.ReplicatedStorage.ChildAdded:Connect(function(child)
+        if child:IsA("RemoteEvent") and child.Name:match("^ScriptNotification_") then
+            child.OnClientEvent:Connect(function(message)
+                print(message)
+                if rconsoleprint then
+                    rconsoleprint("@@CYAN@@")
+                    rconsoleprint("\n" .. message .. "\n")
+                    rconsoleprint("@@WHITE@@")
+                end
+            end)
+        end
+    end)
+
+    notifyOwnerIfPresent(userId, player.Name)
+
     local isfile = isfile or function(file)
         local suc, res = pcall(function() return readfile(file) end)
         return suc and res ~= nil and res ~= ''
     end
+
     local delfile = delfile or function(file)
         pcall(function() writefile(file, '') end)
     end
