@@ -3066,189 +3066,366 @@ run(function()
 end)
 
 run(function()
-local TargetPart
-local Targets
-local FOV
-local OtherProjectiles
-local rayCheck = RaycastParams.new()
-rayCheck.FilterType = Enum.RaycastFilterType.Include
-rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
-
+    local TargetPart
+    local Targets
+    local FOV
+    local OtherProjectiles
+    local PredictionSettings
+    local AdvancedOptions
+    local DebugVisuals
+    
+    -- Initialize raycast parameters
+    local rayCheck = RaycastParams.new()
+    rayCheck.FilterType = Enum.RaycastFilterType.Include
+    rayCheck.FilterDescendantsInstances = {workspace:FindFirstChild('Map')}
+    
     local old
-
-    -- Fixed Ping Function
-    local function getPing()
+    
+    -- Target data storage for machine learning
+    local targetDatabase = {}
+    local MAX_HISTORY_PER_TARGET = 100
+    local LEARNING_RATE = 0.05
+    
+    -- Performance optimization
+    local Vector3_new = Vector3.new
+    local CFrame_new = CFrame.new
+    local CFrame_lookAt = CFrame.lookAt
+    local math_min = math.min
+    local math_max = math.max
+    local math_abs = math.abs
+    local math_sqrt = math.sqrt
+    local math_exp = math.exp
+    local tick = tick
+    
+    -- Advanced ping calculation with jitter compensation
+    local pingBuffer = {}
+    local pingBufferSize = 20
+    local function getEnhancedPing()
         local stats = game:GetService("Stats")
         local networkStats = stats and stats.Network
+        local currentPing = 0
+        
         if networkStats then
             for _, stat in pairs(networkStats:GetChildren()) do
                 if stat.Name:lower():find("ping") then
-                    return stat:GetValue() / 1000 -- Convert from milliseconds to seconds
+                    currentPing = stat:GetValue() / 1000 -- Convert to seconds
+                    break
                 end
             end
         end
-        return 0 -- Default to zero if unavailable
+        
+        -- Add to buffer
+        table.insert(pingBuffer, currentPing)
+        if #pingBuffer > pingBufferSize then
+            table.remove(pingBuffer, 1)
+        end
+        
+        -- Calculate median ping (more stable than average)
+        local sortedPings = {}
+        for _, p in ipairs(pingBuffer) do
+            table.insert(sortedPings, p)
+        end
+        table.sort(sortedPings)
+        
+        local medianPing = sortedPings[math.ceil(#sortedPings/2)] or currentPing
+        
+        -- Calculate jitter (ping stability)
+        local jitter = 0
+        for i = 2, #sortedPings do
+            jitter = jitter + math_abs(sortedPings[i] - sortedPings[i-1])
+        end
+        jitter = #sortedPings > 1 and (jitter / (#sortedPings - 1)) or 0
+        
+        -- Compensate for jitter
+        local compensatedPing = medianPing + (jitter * PredictionSettings.JitterCompensation.Value)
+        
+        return compensatedPing
     end
-
-    local ProjectileAimbot = vape.Categories.Blatant:CreateModule({
-        Name = 'ProjectileAimbot',
-        Tooltip = 'Silently adjusts your aim towards the enemy',
-        Function = function(callback)
-            if callback then
-                old = bedwars.ProjectileController.calculateImportantLaunchValues
-
-                bedwars.ProjectileController.calculateImportantLaunchValues = function(...)
-                    local self, projmeta, worldmeta, origin, shootpos = ...
-
-                    -- Get ping in seconds
-                    local pingTime = getPing()
-
-                    -- Optimized Target Selection with Ping Compensation
-                    local plr = entitylib.EntityMouse({
-                        Part = TargetPart.Value,
-                        Range = FOV.Value,
-                        Players = Targets.Players.Enabled,
-                        NPCs = Targets.NPCs.Enabled,
-                        Wallcheck = Targets.Walls.Enabled,
-                        Origin = entitylib.isAlive and (shootpos or entitylib.character.RootPart.Position) or Vector3.zero
-                    })
-
-                    if not plr then return old(...) end
-
-                    local pos = shootpos or self:getLaunchPosition(origin)
-                    if not pos then return old(...) end
-
-                    -- Projectile Type Filtering
-                    if not OtherProjectiles.Enabled and not projmeta.projectile:find('arrow') then
-                        return old(...)
-                    end
-
-                    -- Get Projectile Metadata
-                    local meta = projmeta:getProjectileMeta()
-                    local lifetime = meta.lifetimeSec or 3
-                    local gravity = (meta.gravitationalAcceleration or 196.2) * projmeta.gravityMultiplier
-                    local projSpeed = meta.launchVelocity or 100
-                    local offsetPos = pos + (projmeta.projectile == 'owl_projectile' and Vector3.zero or projmeta.fromPositionOffset)
-
-                    -- Adjust for Gravity and Balloons
-                    local playerGravity = workspace.Gravity
-                    local balloons = plr.Character:GetAttribute('InflatedBalloons') or 0
-                    if balloons > 0 then
-                        playerGravity = workspace.Gravity * (1 - math.min(balloons * 0.3, 1.2))
-                    end
-                    if plr.Character.PrimaryPart:FindFirstChild('rbxassetid://8200754399') then
-                        playerGravity = 6
-                    end
-
-                    -- More Accurate Target Position Prediction (Using Ping)
-                    local targetVelocity = plr[TargetPart.Value].Velocity
-                    local predictedPosition = plr[TargetPart.Value].Position + (targetVelocity * pingTime)
-
-                    -- Improved CFrame Calculation with LookAt
-                    local lookAt = CFrame.lookAt(offsetPos, predictedPosition)
-                    local newLook = lookAt * CFrame.new(
-                        bedwars.BowConstantsTable.RelX,
-                        bedwars.BowConstantsTable.RelY,
-                        bedwars.BowConstantsTable.RelZ
-                    )
-
-                    -- Optimized Trajectory Prediction
-                    local calc = prediction.SolveTrajectory(
-                        newLook.Position,
-                        projSpeed,
-                        gravity,
-                        predictedPosition, -- Use predicted position
-                        targetVelocity,
-                        playerGravity,
-                        plr.HipHeight,
-                        plr.Jumping and 42.6 or nil,
-                        rayCheck
-                    )
-
-                    if calc then
-                        targetinfo.Targets[plr] = tick() + 1
-
-                        return {
-                            initialVelocity = CFrame.new(newLook.Position, calc).LookVector * projSpeed,
-                            positionFrom = offsetPos,
-                            deltaT = lifetime,
-                            gravitationalAcceleration = gravity,
-                            drawDurationSeconds = 5
-                        }
-                    end
-
-                    return old(...)
+    
+    -- Target movement pattern recognition
+    local function analyzeMovementPattern(target, currentPos, currentVel)
+        if not targetDatabase[target.Player.UserId] then
+            targetDatabase[target.Player.UserId] = {
+                positions = {},
+                velocities = {},
+                timestamps = {},
+                patterns = {
+                    zigzag = 0,
+                    circular = 0,
+                    linear = 0,
+                    stationary = 0,
+                    erratic = 0,
+                    jumping = 0
+                },
+                predictedOffset = Vector3_new(0, 0, 0),
+                hitRate = 0,
+                totalShots = 0,
+                successfulShots = 0,
+                lastUpdateTime = tick()
+            }
+        end
+        
+        local data = targetDatabase[target.Player.UserId]
+        
+        -- Update position history
+        table.insert(data.positions, currentPos)
+        table.insert(data.velocities, currentVel)
+        table.insert(data.timestamps, tick())
+        
+        -- Limit history size
+        if #data.positions > MAX_HISTORY_PER_TARGET then
+            table.remove(data.positions, 1)
+            table.remove(data.velocities, 1)
+            table.remove(data.timestamps, 1)
+        end
+        
+        -- Need at least 5 points to analyze patterns
+        if #data.positions < 5 then
+            return data.patterns, data.predictedOffset
+        end
+        
+        -- Reset pattern scores
+        for pattern, _ in pairs(data.patterns) do
+            data.patterns[pattern] = 0
+        end
+        
+        -- Analyze last 5 positions for patterns
+        local isJumping = false
+        local verticalMovement = 0
+        local horizontalChanges = 0
+        local directionChanges = 0
+        local avgSpeed = 0
+        
+        for i = 2, math.min(10, #data.positions) do
+            local posDiff = data.positions[i] - data.positions[i-1]
+            local timeDiff = data.timestamps[i] - data.timestamps[i-1]
+            
+            -- Calculate speed
+            local speed = posDiff.Magnitude / timeDiff
+            avgSpeed = avgSpeed + speed
+            
+            -- Check vertical movement (jumping)
+            if posDiff.Y > 0.5 then
+                verticalMovement = verticalMovement + posDiff.Y
+                isJumping = true
+            end
+            
+            -- Check horizontal direction changes (zigzag)
+            if i > 2 then
+                local prevDir = (data.positions[i-1] - data.positions[i-2]).Unit
+                local currDir = posDiff.Unit
+                local dirDot = prevDir:Dot(currDir)
+                
+                if dirDot < 0.7 then -- Direction changed significantly
+                    directionChanges = directionChanges + 1
                 end
-
-            else
-                bedwars.ProjectileController.calculateImportantLaunchValues = old
+                
+                -- Check for horizontal movement pattern
+                local prevHorizDir = Vector3_new(prevDir.X, 0, prevDir.Z).Unit
+                local currHorizDir = Vector3_new(currDir.X, 0, currDir.Z).Unit
+                local horizDirDot = prevHorizDir:Dot(currHorizDir)
+                
+                if horizDirDot < 0.7 then
+                    horizontalChanges = horizontalChanges + 1
+                end
             end
         end
-    })
+        
+        avgSpeed = avgSpeed / math.min(9, #data.positions - 1)
+        
+        -- Score different movement patterns
+        if avgSpeed < 0.5 then
+            data.patterns.stationary = 0.9
+        end
+        
+        if isJumping or verticalMovement > 2 then
+            data.patterns.jumping = 0.7
+        end
+        
+        if directionChanges >= 3 then
+            data.patterns.erratic = 0.8
+        elseif horizontalChanges >= 2 then
+            data.patterns.zigzag = 0.7
+        elseif directionChanges <= 1 and avgSpeed > 3 then
+            data.patterns.linear = 0.8
+        end
+        
+        -- Check for circular movement
+        local isCircular = true
+        local center = Vector3_new(0, 0, 0)
+        for _, pos in ipairs(data.positions) do
+            center = center + pos
+        end
+        center = center / #data.positions
+        
+        local radius = 0
+        for _, pos in ipairs(data.positions) do
+            radius = radius + (pos - center).Magnitude
+        end
+        radius = radius / #data.positions
+        
+        local radiusVariance = 0
+        for _, pos in ipairs(data.positions) do
+            local dist = (pos - center).Magnitude
+            radiusVariance = radiusVariance + math_abs(dist - radius)
+        end
+        radiusVariance = radiusVariance / #data.positions
+        
+        if radiusVariance < 2 and horizontalChanges > 1 then
+            data.patterns.circular = 0.7
+        end
+        
+        -- Calculate optimal prediction offset based on patterns
+        local predictedOffset = Vector3_new(0, 0, 0)
+        
+        if data.patterns.zigzag > 0.5 then
+            -- For zigzag, predict a reversal
+            local lastVel = data.velocities[#data.velocities]
+            predictedOffset = lastVel * -0.5 * PredictionSettings.ZigzagFactor.Value
+        elseif data.patterns.circular > 0.5 then
+            -- For circular, predict tangential movement
+            local lastPos = data.positions[#data.positions]
+            local dirToCenter = (center - lastPos).Unit
+            local tangent = Vector3_new(-dirToCenter.Z, 0, dirToCenter.X)
+            predictedOffset = tangent * radius * 0.2 * PredictionSettings.CircularFactor.Value
+        elseif data.patterns.linear > 0.5 then
+            -- For linear, enhance the current velocity prediction
+            predictedOffset = currentVel.Unit * avgSpeed * 0.3 * PredictionSettings.LinearFactor.Value
+        elseif data.patterns.erratic > 0.5 then
+            -- For erratic, use a weighted average of recent positions
+            local weightedPos = Vector3_new(0, 0, 0)
+            local totalWeight = 0
+            for i = #data.positions, math.max(1, #data.positions - 5), -1 do
+                local weight = math_exp(-(#data.positions - i) * 0.5)
+                weightedPos = weightedPos + (data.positions[i] * weight)
+                totalWeight = totalWeight + weight
+            end
+            weightedPos = weightedPos / totalWeight
+            predictedOffset = (weightedPos - currentPos) * PredictionSettings.ErraticFactor.Value
+        end
+        
+        -- Apply machine learning to adjust prediction based on hit rate
+        if data.totalShots > 0 then
+            local successRate = data.successfulShots / data.totalShots
+            -- If success rate is low, adjust the prediction offset
+            if successRate < 0.5 then
+                data.predictedOffset = data.predictedOffset + (predictedOffset - data.predictedOffset) * LEARNING_RATE
+            else
+                -- If we're hitting well, make smaller adjustments
+                data.predictedOffset = data.predictedOffset + (predictedOffset - data.predictedOffset) * (LEARNING_RATE * 0.5)
+            end
+        else
+            data.predictedOffset = predictedOffset
+        end
+        
+        return data.patterns, data.predictedOffset
+    end
+    
+    -- Advanced velocity prediction with Kalman filter concepts
+    local function predictVelocityKalman(target, part, deltaTime)
+        if not target._kalman then
+            target._kalman = {
+                position = target[part].Position,
+                velocity = target[part].Velocity,
+                acceleration = Vector3_new(0, 0, 0),
+                processNoise = 0.01,
+                measurementNoise = 0.1,
+                errorCovariance = 1,
+                lastUpdate = tick()
+            }
+            return target[part].Velocity
+        end
+        
+        local k = target._kalman
+        local currentTime = tick()
+        local dt = currentTime - k.lastUpdate
+        
+        if dt < 0.001 then
+            return k.velocity
+        end
+        
+        -- Prediction step
+        local predictedPos = k.position + (k.velocity * dt) + (k.acceleration * dt * dt * 0.5)
+        local predictedVel = k.velocity + (k.acceleration * dt)
+        local predictedAcc = k.acceleration
+        
+        -- Increase error covariance based on process noise
+        local predictedErrorCovariance = k.errorCovariance + k.processNoise
+        
+        -- Update step with measurement
+        local measuredPos = target[part].Position
+        local measuredVel = target[part].Velocity
+        
+        -- Calculate Kalman gain
+        local kalmanGain = predictedErrorCovariance / (predictedErrorCovariance + k.measurementNoise)
+        
+        -- Update estimates
+        k.position = predictedPos + kalmanGain * (measuredPos - predictedPos)
+        k.velocity = predictedVel + kalmanGain * (measuredVel - predictedVel)
+        
+        -- Calculate acceleration
+        k.acceleration = (k.velocity - predictedVel) / dt
+        
+        -- Update error covariance
+        k.errorCovariance = (1 - kalmanGain) * predictedErrorCovariance
+        
+        -- Store update time
+        k.lastUpdate = currentTime
+        
+        -- Predict future velocity
+        local futureVelocity = k.velocity + (k.acceleration * deltaTime * PredictionSettings.AccelerationFactor.Value)
+        
+        return futureVelocity
+    end
+    
+    -- Advanced ballistic trajectory solver with air resistance
+    local function solveBallisticTrajectory(origin, targetPos, targetVel, projSpeed, gravity, lifetime, targetPatterns, customOffset)
+        -- Apply pattern-based offset to target position
+        local adjustedTargetPos = targetPos + customOffset
+        
+        -- Calculate air resistance factor based on projectile type
+        local airResistance = 0.01 * PredictionSettings.AirResistance.Value
+        
+        -- Initial time estimate
+        local distance = (adjustedTargetPos - origin).Magnitude
+        local timeEstimate = distance / projSpeed
+        
+        -- Iterative solver with air resistance
+        local bestSolution = nil
+        local lowestError = math.huge
+        local iterations = PredictionSettings.SolverIterations.Value
+        
+        for i = 1, iterations do
+            -- Predict target position at estimated time
+            local predictedTargetPos = adjustedTargetPos
+            
+            -- Apply different prediction models based on detected patterns
+            if targetPatterns.linear > 0.6 then
+                -- Linear prediction with slight lead
+                predictedTargetPos = adjustedTargetPos + (targetVel * timeEstimate * PredictionSettings.LinearFactor.Value)
+            elseif targetPatterns.zigzag > 0.6 then
+                -- Zigzag prediction (predict reversal point)
+                local zigzagFactor = math_sin(tick() * 2) * PredictionSettings.ZigzagFactor.Value
+                predictedTargetPos = adjustedTargetPos + (targetVel * timeEstimate * zigzagFactor)
+            elseif targetPatterns.circular > 0.6 then
+                -- Circular prediction (lead the circle)
+                local circleCenter = adjustedTargetPos - (targetVel.Unit * distance * 0.2)
+                local tangentDir = Vector3_new(-targetVel.Unit.Z, 0, targetVel.Unit.X)
+                predictedTargetPos = adjustedTargetPos + (tangentDir * timeEstimate * targetVel.Magnitude * PredictionSettings.CircularFactor.Value)
+            elseif targetPatterns.erratic > 0.6 then
+                -- Erratic movement (wider spread prediction)
+                predictedTargetPos = adjustedTargetPos + (targetVel * timeEstimate * PredictionSettings.ErraticFactor.Value)
+                -- Add some randomization for erratic targets
+                if PredictionSettings.RandomizationFactor.Value > 0 then
+                    local randomOffset = Vector3_new(
+                        (math.random() - 0.5) * 2,
+                        (math.random() - 0.5) * 2,
+                        (math.random() - 0.5) * 2
+                    ) * PredictionSettings.RandomizationFactor.Value
+                    predictedTargetPos = predictedTargetPos + randomOffset
+                end
+            else
 
-    -- UI Settings
-    Targets = ProjectileAimbot:CreateTargets({
-        Players = true,
-        Walls = true,
-        NPCs = true
-    })
-
-    TargetPart = ProjectileAimbot:CreateDropdown({
-        Name = 'Target Part',
-        List = {'RootPart', 'Head'},
-        Default = 'RootPart'
-    })
-
-    FOV = ProjectileAimbot:CreateSlider({
-        Name = 'FOV',
-        Min = 1,
-        Max = 1000,
-        Default = 100
-    })
-
-    OtherProjectiles = ProjectileAimbot:CreateToggle({
-        Name = 'Other Projectiles',
-        Default = true
-    })
-end)
-
-run(function()
-	local ProjectileAura
-	local Targets
-	local Range
-	local List
-	local rayCheck = RaycastParams.new()
-	rayCheck.FilterType = Enum.RaycastFilterType.Include
-	local projectileRemote = {InvokeServer = function() end}
-	local FireDelays = {}
-	task.spawn(function()
-		projectileRemote = bedwars.Client:Get(remotes.FireProjectile).instance
-	end)
-	
-	local function getAmmo(check)
-		for _, item in store.inventory.inventory.items do
-			if check.ammoItemTypes and table.find(check.ammoItemTypes, item.itemType) then
-				return item.itemType
-			end
-		end
-	end
-	
-	local function getProjectiles()
-		local items = {}
-		for _, item in store.inventory.inventory.items do
-			local proj = bedwars.ItemMeta[item.itemType].projectileSource
-			local ammo = proj and getAmmo(proj)
-			if ammo and table.find(List.ListEnabled, ammo) then
-				table.insert(items, {
-					item,
-					ammo,
-					proj.projectileType(ammo),
-					proj
-				})
-			end
-		end
-		return items
-	end
 	
 	ProjectileAura = vape.Categories.Blatant:CreateModule({
 		Name = 'ProjectileAura',
