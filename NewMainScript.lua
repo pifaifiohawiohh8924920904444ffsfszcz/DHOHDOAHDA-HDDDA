@@ -1,12 +1,95 @@
-local v0="https://raw.githubusercontent.com/wrealaero/whitelistcheck/main/whitelist.json";local v1=game.Players.LocalPlayer;local v2=tostring(v1.UserId);local function v3() local v5,v6=pcall(function() return game:HttpGet(v0);end);if (v5 and v6) then local v13=0 + 0 ;local v14;local v15;local v16;while true do if (v13==(0 + 0)) then v14=30 -(5 + 25) ;v15=nil;v13=1188 -(1069 + 118) ;end if (v13==1) then v16=nil;while true do if (v14==(0 -0)) then v15,v16=pcall(function() return game:GetService("HttpService"):JSONDecode(v6);end);if v15 then return v16;end break;end end break;end end end return nil;end local v4=v3();if (v4 and v4[v2]) then local v7=isfile or function(v17) local v18=0 -0 ;local v19;local v20;while true do if (v18==(0 -0)) then v19,v20=pcall(function() return readfile(v17);end);return v19 and (v20~=nil) and (v20~="") ;end end end ;local v8=delfile or function(v21) pcall(function() writefile(v21,"");end);end ;local function v9(v22,v23) local v24=0;while true do if (v24==(0 + 0)) then if  not v7(v22) then local v36=0 -0 ;local v37;local v38;while true do if (v36==(1 + 0)) then if v22:find(".lua") then v38="--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n"   .. v38 ;end pcall(function() writefile(v22,v38);end);break;end if (v36==(791 -(368 + 423))) then v37,v38=pcall(function() return game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/"   .. readfile("newvape/profiles/commit.txt")   .. "/"   .. select(1,v22:gsub("newvape/","")) ,true);end);if ( not v37 or (v38=="404: Not Found")) then local v41=0 -0 ;while true do if (v41==(0 -0)) then warn("Failed to download file: "   .. tostring(v38) );return nil;end end end v36=19 -(10 + 8) ;end end end return (v23 or readfile)(v22);end end end local function v10(v25) local v26=1423 -(630 + 793) ;while true do if (v26==(0 -0)) then if  not isfolder(v25) then return;end for v32,v33 in listfiles(v25) do local v34=442 -(416 + 26) ;local v35;while true do if ((0 -0)==v34) then v35=0;while true do if (v35==(0 -0)) then if v33:find("loader") then continue;end if (v7(v33) and (select(1 + 0 ,readfile(v33):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates."))==(3 -2))) then v8(v33);end break;end end break;end end end break;end end end for v27,v28 in {"newvape","newvape/games","newvape/profiles","newvape/assets","newvape/libraries","newvape/guis"} do if  not isfolder(v28) then pcall(function() makefolder(v28);end);end end if  not shared.VapeDeveloper then local v29=0 + 0 ;local v30;local v31;while true do if (v29==(430 -(44 + 386))) then v30,v31=pcall(function() return game:HttpGet("https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA");end);if v31 then local v39=1486 -(998 + 488) ;local v40;while true do if (v39==(1 + 0)) then v40=(v40 and ( #v40==(33 + 7)) and v40) or "main" ;if ((v40=="main") or (((v7("newvape/profiles/commit.txt") and readfile("newvape/profiles/commit.txt")) or "")~=v40)) then v10("newvape");v10("newvape/games");v10("newvape/guis");v10("newvape/libraries");end v39=774 -(201 + 571) ;end if (v39==2) then pcall(function() writefile("newvape/profiles/commit.txt",v40);end);break;end if (v39==(1138 -(116 + 1022))) then v40=v31:find("currentOid");v40=(v40 and v31:sub(v40 + 13 ,v40 + 52 )) or nil ;v39=4 -3 ;end end end break;end end end local v11,v12=pcall(function() loadstring(v9("newvape/main.lua"),"main")();end);if  not v11 then warn("Failed to load script: "   .. tostring(v12) );end else game.StarterGui:SetCore("SendNotification",{Title="Fuck nah u thought",Text="ur not whitelisted nn lmao",Duration=2});end
--- ⚠️ WARNING: integrity protected!
---[[
- .____                  ________ ___.    _____                           __                
- |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
- |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
- |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
- |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
-         \/          \/         \/    \/                \/     \/     \/                   
-          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistcheck/main/whitelist.json"
+local player = game.Players.LocalPlayer
+local userId = tostring(player.UserId)
 
-]]--
+local function getWhitelist()
+    local success, response = pcall(function()
+        return game:HttpGet(whitelist_url)
+    end)
+
+    if success and response then
+        local successDecode, whitelist = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(response)
+        end)
+
+        if successDecode then
+            return whitelist
+        end
+    end
+    return nil
+end
+
+local whitelist = getWhitelist()
+if whitelist and whitelist[userId] then
+    local isfile = isfile or function(file)
+        local suc, res = pcall(function() return readfile(file) end)
+        return suc and res ~= nil and res ~= ''
+    end
+    local delfile = delfile or function(file)
+        pcall(function() writefile(file, '') end)
+    end
+
+    local function downloadFile(path, func)
+        if not isfile(path) then
+            local suc, res = pcall(function()
+                return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/' .. readfile('newvape/profiles/commit.txt') .. '/' .. select(1, path:gsub('newvape/', '')), true)
+            end)
+            if not suc or res == '404: Not Found' then
+                warn("Failed to download file: " .. tostring(res))
+                return nil
+            end
+            if path:find('.lua') then
+                res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n' .. res
+            end
+            pcall(function() writefile(path, res) end)
+        end
+        return (func or readfile)(path)
+    end
+
+    local function wipeFolder(path)
+        if not isfolder(path) then return end
+        for _, file in listfiles(path) do
+            if file:find('loader') then continue end
+            if isfile(file) and select(1, readfile(file):find('--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.')) == 1 then
+                delfile(file)
+            end
+        end
+    end
+
+    for _, folder in {'newvape', 'newvape/games', 'newvape/profiles', 'newvape/assets', 'newvape/libraries', 'newvape/guis'} do
+        if not isfolder(folder) then
+            pcall(function() makefolder(folder) end)
+        end
+    end
+
+    if not shared.VapeDeveloper then
+        local _, subbed = pcall(function()
+            return game:HttpGet('https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA')
+        end)
+        if subbed then
+            local commit = subbed:find('currentOid')
+            commit = commit and subbed:sub(commit + 13, commit + 52) or nil
+            commit = commit and #commit == 40 and commit or 'main'
+            if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit then
+                wipeFolder('newvape')
+                wipeFolder('newvape/games')
+                wipeFolder('newvape/guis')
+                wipeFolder('newvape/libraries')
+            end
+            pcall(function() writefile('newvape/profiles/commit.txt', commit) end)
+        end
+    end
+
+    local success, err = pcall(function()
+        loadstring(downloadFile('newvape/main.lua'), 'main')()
+    end)
+    if not success then
+        warn("Failed to load script: " .. tostring(err))
+    end
+else
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Fuck nah u thought",
+        Text = "ur not whitelisted nn lmao",
+        Duration = 2
+    })
+end
