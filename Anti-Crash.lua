@@ -14,6 +14,10 @@ local LastMemoryCheck = 0
 local MemoryCheckInterval = 5
 local Executor = identifyexecutor and identifyexecutor() or "Unknown"
 
+-- Debugging function to print AntiCrash and its methods
+print("AntiCrash table initialized:", AntiCrash)
+print("AntiCrash:Enable function exists:", AntiCrash.Enable)
+
 local function SafePcall(fn, ...)
 	local s, r = pcall(fn, ...)
 	return s and r or nil
@@ -87,6 +91,13 @@ local function SelfHealHooks()
 end
 
 function AntiCrash:Enable()
+	if not AntiCrash then
+		print("Error: AntiCrash table is nil!")
+		return
+	end
+
+	print("AntiCrash:Enable called!")
+
 	IsEnabled = true
 	local services = {
 		game:GetService("Workspace"),
@@ -188,3 +199,27 @@ function AntiCrash:Enable()
 	if Executor == "Unknown" then
 		warn("AntiCrash: Executor not detected. Behavior may vary.")
 	end
+	return true
+end
+
+function AntiCrash:Disable()
+	IsEnabled = false
+	for instance, methods in pairs(OriginalFunctions) do
+		if typeof(instance) == "Instance" and instance:IsDescendantOf(game) then
+			for methodName, original in pairs(methods) do
+				pcall(function()
+					instance[methodName] = original
+				end)
+			end
+		end
+	end
+	OriginalFunctions = {}
+	ProtectedInstances = {}
+	return true
+end
+
+-- Debugging print to confirm that AntiCrash:Enable is called
+print("Calling AntiCrash:Enable()")
+AntiCrash:Enable()
+
+return AntiCrash
