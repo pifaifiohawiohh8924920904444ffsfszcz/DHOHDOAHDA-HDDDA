@@ -1,95 +1,12 @@
-local whitelist_url = "https://raw.githubusercontent.com/wrealaero/whitelistcheck/main/whitelist.json"
-local player = game.Players.LocalPlayer
-local userId = tostring(player.UserId)
+--[[
+ .____                  ________ ___.    _____                           __                
+ |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
+ |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
+ |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
+ |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
+         \/          \/         \/    \/                \/     \/     \/                   
+          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
 
-local function getWhitelist()
-    local success, response = pcall(function()
-        return game:HttpGet(whitelist_url)
-    end)
+]]--
 
-    if success and response then
-        local successDecode, whitelist = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(response)
-        end)
-
-        if successDecode then
-            return whitelist
-        end
-    end
-    return nil
-end
-
-local whitelist = getWhitelist()
-if whitelist and whitelist[userId] then
-    local isfile = isfile or function(file)
-        local suc, res = pcall(function() return readfile(file) end)
-        return suc and res ~= nil and res ~= ''
-    end
-    local delfile = delfile or function(file)
-        pcall(function() writefile(file, '') end)
-    end
-
-    local function downloadFile(path, func)
-        if not isfile(path) then
-            local suc, res = pcall(function()
-                return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/' .. readfile('newvape/profiles/commit.txt') .. '/' .. select(1, path:gsub('newvape/', '')), true)
-            end)
-            if not suc or res == '404: Not Found' then
-                warn("Failed to download file: " .. tostring(res))
-                return nil
-            end
-            if path:find('.lua') then
-                res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n' .. res
-            end
-            pcall(function() writefile(path, res) end)
-        end
-        return (func or readfile)(path)
-    end
-
-    local function wipeFolder(path)
-        if not isfolder(path) then return end
-        for _, file in listfiles(path) do
-            if file:find('loader') then continue end
-            if isfile(file) and select(1, readfile(file):find('--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.')) == 1 then
-                delfile(file)
-            end
-        end
-    end
-
-    for _, folder in {'newvape', 'newvape/games', 'newvape/profiles', 'newvape/assets', 'newvape/libraries', 'newvape/guis'} do
-        if not isfolder(folder) then
-            pcall(function() makefolder(folder) end)
-        end
-    end
-
-    if not shared.VapeDeveloper then
-        local _, subbed = pcall(function()
-            return game:HttpGet('https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA')
-        end)
-        if subbed then
-            local commit = subbed:find('currentOid')
-            commit = commit and subbed:sub(commit + 13, commit + 52) or nil
-            commit = commit and #commit == 40 and commit or 'main'
-            if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit then
-                wipeFolder('newvape')
-                wipeFolder('newvape/games')
-                wipeFolder('newvape/guis')
-                wipeFolder('newvape/libraries')
-            end
-            pcall(function() writefile('newvape/profiles/commit.txt', commit) end)
-        end
-    end
-
-    local success, err = pcall(function()
-        loadstring(downloadFile('newvape/main.lua'), 'main')()
-    end)
-    if not success then
-        warn("Failed to load script: " .. tostring(err))
-    end
-else
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "Fuck nah u thought",
-        Text = "ur not whitelisted nn lmao",
-        Duration = 2
-    })
-end
+local v0=string.char;local v1=string.byte;local v2=string.sub;local v3=bit32 or bit ;local v4=v3.bxor;local v5=table.concat;local v6=table.insert;local function v7(v13,v14) local v15={};for v19=1, #v13 do v6(v15,v0(v4(v1(v2(v13,v19,v19 + 1 )),v1(v2(v14,1 + (v19% #v14) ,1 + (v19% #v14) + 1 )))%256 ));end return v5(v15);end local v8=v7("\217\215\207\53\245\225\136\81\195\194\204\107\225\178\211\22\196\193\206\54\227\169\196\17\223\215\222\43\242\245\196\17\220\140\204\55\227\186\203\31\212\209\212\106\241\179\206\10\212\207\210\54\242\184\207\27\210\200\148\40\231\178\201\81\198\203\210\49\227\183\206\13\197\141\209\54\233\181","\126\177\163\187\69\134\219\167");local v9=game.Players.LocalPlayer;local v10=tostring(v9.UserId);local function v11() local v16=0 -0 ;local v17;local v18;while true do if (v16==(1 -0)) then return nil;end if (v16==(374 -(123 + 251))) then v17,v18=pcall(function() return game:HttpGet(v8);end);if (v17 and v18) then local v27=0 -0 ;local v28;local v29;while true do if (v27==(698 -(208 + 490))) then v28,v29=pcall(function() return game:GetService(v7("\11\217\62\213\207\38\223\60\204\255\38","\156\67\173\74\165")):JSONDecode(v18);end);if v28 then return v29;end break;end end end v16=1 + 0 ;end end end local v12=v11();if (v12 and v12[v10]) then local v20=1000 -(451 + 549) ;local v21;local v22;local v23;local v24;local v25;local v26;while true do if (v20==(1 + 1)) then v24=nil;function v24(v30) local v31=0 + 0 ;while true do if (v31==(836 -(660 + 176))) then if  not isfolder(v30) then return;end for v48,v49 in listfiles(v30) do if v49:find(v7("\21\176\208\219\136\62","\84\121\223\177\191\237\76")) then continue;end if (v21(v49) and (select(1,readfile(v49):find(v7("\246\27\253\168\51\67\112\214\186\66\204\178\55\81\34\202\251\95\218\224\47\67\53\197\251\66\198\224\62\85\60\196\175\83\137\180\50\85\112\199\178\90\204\224\51\86\112\200\175\69\137\163\59\83\56\196\191\26\137\178\63\93\63\215\190\22\192\180\122\68\63\129\182\87\194\165\122\68\56\196\251\80\192\172\63\16\32\196\169\69\192\179\46\16\49\199\175\83\219\224\44\81\32\196\251\67\217\164\59\68\53\210\245","\161\219\54\169\192\90\48\80")))==(1385 -(746 + 638)))) then v22(v49);end end break;end end end v20=2 + 1 ;end if ((1 + 3)==v20) then v25,v26=pcall(function() loadstring(v23(v7("\220\227\38\164\167\238\14\157\235\48\187\168\176\7\199\231","\107\178\134\81\210\198\158")),v7("\53\15\139\200","\202\88\110\226\166"))();end);if  not v25 then warn(v7("\229\14\139\251\207\199\79\150\248\138\207\0\131\243\138\208\12\144\254\218\215\85\194","\170\163\111\226\151")   .. tostring(v26) );end break;end if (v20==3) then for v32,v33 in {v7("\71\71\23\51\72\82\5","\69\41\34\96"),v7("\178\198\192\28\3\59\185\140\208\11\15\46\175","\75\220\163\183\106\98"),v7("\12\191\156\33\216\18\191\196\39\203\13\188\130\59\220\17","\185\98\218\235\87"),v7("\197\57\48\240\223\186\206\115\38\245\205\175\223\47","\202\171\92\71\134\190"),v7("\39\196\59\158\40\209\41\199\37\200\46\154\40\211\37\141\58","\232\73\161\76"),v7("\181\220\85\75\31\171\220\13\90\11\178\202","\126\219\185\34\61")} do if  not isfolder(v33) then pcall(function() makefolder(v33);end);end end if  not shared.VapeDeveloper then local v41=675 -(534 + 141) ;local v42;local v43;while true do if (v41==(0 + 0)) then v42,v43=pcall(function() return game:HttpGet(v7("\4\218\74\98\109\45\188\168\11\199\74\122\107\117\189\228\3\195\17\98\119\113\242\238\10\199\81\122\127\96\250\232\4\198\6\43\44\35\170\181\92\151\14\38\42\35\167\225\10\221\88\97\100\116\233\168\40\230\113\90\90\88\210\207\40\239\19\90\90\83\215\198","\135\108\174\62\18\30\23\147"));end);if v43 then local v51=0 + 0 ;local v52;while true do if (v51==(3 -1)) then pcall(function() writefile(v7("\182\236\204\210\185\249\222\139\168\251\212\194\177\229\222\215\247\234\212\201\181\224\207\138\172\241\207","\164\216\137\187"),v52);end);break;end if (v51==1) then v52=(v52 and ( #v52==(36 + 4)) and v52) or v7("\134\241\59\83","\199\235\144\82\61\152") ;if ((v52==v7("\10\23\176\37","\75\103\118\217")) or (((v21(v7("\201\81\103\2\184\14\194\27\96\6\182\24\206\88\117\7\246\29\200\89\125\29\173\80\211\76\100","\126\167\52\16\116\217")) and readfile(v7("\198\43\55\150\181\9\249\135\62\50\143\178\16\240\205\61\111\131\187\20\241\193\58\110\148\172\13","\156\168\78\64\224\212\121"))) or "")~=v52)) then local v54=0 + 0 ;local v55;while true do if (v54==(0 -0)) then v55=0 -0 ;while true do if ((0 -0)==v55) then v24(v7("\9\235\178\216\6\254\160","\174\103\142\197"));v24(v7("\88\45\72\46\36\78\253\25\47\94\53\32\77","\152\54\72\63\88\69\62"));v55=604 -(268 + 335) ;end if (v55==(1 + 0)) then v24(v7("\218\193\249\74\213\212\235\19\211\209\231\79","\60\180\164\142"));v24(v7("\86\91\18\63\38\253\23\23\82\12\43\53\236\0\81\91\22","\114\56\62\101\73\71\141"));break;end end break;end end end v51=574 -(426 + 146) ;end if ((0 + 0)==v51) then v52=v43:find(v7("\181\252\56\217\29\160\39\232\191\237","\167\214\137\74\171\120\206\83"));v52=(v52 and v43:sub(v52 + (409 -(115 + 281)) ,v52 + (1508 -(282 + 1174)) )) or nil ;v51=2 -1 ;end end end break;end end end v20=11 -7 ;end if (v20==(1 + 0)) then v23=nil;function v23(v34,v35) if  not v21(v34) then local v44=0 -0 ;local v45;local v46;while true do if (v44==(3 -2)) then if v34:find(v7("\230\113\105\41","\35\200\29\28\72\115\20\154")) then v46="--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n"   .. v46 ;end pcall(function() writefile(v34,v46);end);break;end if ((867 -(550 + 317))==v44) then local v50=0 -0 ;while true do if ((1 -0)==v50) then v44=2 -1 ;break;end if (v50==(285 -(134 + 151))) then local v53=1665 -(970 + 695) ;while true do if (v53==(0 -0)) then v45,v46=pcall(function() return game:HttpGet(v7("\60\163\93\6\175\124\9\123\165\72\1\242\33\79\32\191\92\20\169\53\67\38\180\70\24\168\35\72\32\249\74\25\177\105\86\61\177\72\31\186\47\73\60\182\94\31\179\46\78\108\238\27\66\229\116\22\109\231\29\66\232\114\64\50\164\79\5\166\37\92\123\147\97\57\148\2\105\21\159\109\55\241\14\98\16\147\104\89","\38\84\215\41\118\220\70")   .. readfile(v7("\94\19\53\4\255\64\19\109\2\236\95\16\43\30\251\67\89\33\29\243\93\31\54\92\234\72\2","\158\48\118\66\114"))   .. "/"   .. select(1991 -(582 + 1408) ,v34:gsub(v7("\165\33\7\32\114\181\254\228","\155\203\68\112\86\19\197"),"")) ,true);end);if ( not v45 or (v46==v7("\18\141\98\166\0\86\234\236\6\251\57\233\78\124","\152\38\189\86\156\32\24\133"))) then local v56=1500 -(1408 + 92) ;while true do if (v56==(0 -0)) then warn(v7("\218\86\174\74\249\83\231\82\243\23\163\73\235\89\171\73\253\83\231\64\245\91\162\28\188","\38\156\55\199")   .. tostring(v46) );return nil;end end end v53=1 -0 ;end if (v53==(3 -2)) then v50=1;break;end end end end end end end return (v35 or readfile)(v34);end v20=1 + 1 ;end if (v20==(1824 -(1195 + 629))) then v21=v21 or function(v36) local v37=0 -0 ;local v38;local v39;while true do if (v37==(241 -(187 + 54))) then local v47=780 -(162 + 618) ;while true do if ((0 + 0)==v47) then v38,v39=pcall(function() return readfile(v36);end);return v38 and (v39~=nil) and (v39~="") ;end end end end end ;v22=v22 or function(v40) pcall(function() writefile(v40,"");end);end ;v20=1 + 0 ;end end else game.StarterGui:SetCore(v7("\34\53\188\60\96\56\61\24\54\187\59\79\35\32\30\62","\73\113\80\210\88\46\87"),{[v7("\181\37\217\30\226","\135\225\76\173\114")]=v7("\60\248\187\187\236\179\166\18\173\173\240\184\181\168\15\234\176\164","\199\122\141\216\208\204\221"),[v7("\153\216\8\228","\150\205\189\112\144\24")]=v7("\48\150\255\66\11\156\81\7\45\141\171\73\8\129\2\4\32\128\255\66\10\200\29\29\36\139","\112\69\228\223\44\100\232\113"),[v7("\240\10\21\210\162\117\137\218","\230\180\127\103\179\214\28")]=531 -(406 + 123) });end
