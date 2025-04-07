@@ -27,7 +27,7 @@ local function HookMethod(instance, methodName, customFunction)
 	instance[methodName] = function(...)
 		local success, result = pcall(function(...) return customFunction(originalFunction, ...) end, ...)
 		if not success and IsEnabled then
-			ErrorCount += 1
+			ErrorCount = ErrorCount + 1
 			if tick() - LastErrorTime > 60 then
 				ErrorCount = 1
 				LastErrorTime = tick()
@@ -108,7 +108,7 @@ function AntiCrash:Enable()
 			local callCount = self._antiCrashCallCount or 0
 			local lastCallTime = self._antiCrashLastCall or 0
 			if tick() - lastCallTime < 1 then
-				callCount += 1
+				callCount = callCount + 1
 			else
 				callCount = 1
 			end
@@ -122,7 +122,7 @@ function AntiCrash:Enable()
 	local oldError = error
 	error = function(...)
 		if IsEnabled then
-			ErrorCount += 1
+			ErrorCount = ErrorCount + 1
 			if tick() - LastErrorTime > 60 then
 				ErrorCount = 1
 				LastErrorTime = tick()
@@ -135,7 +135,7 @@ function AntiCrash:Enable()
 	local oldAssert = assert
 	assert = function(cond, ...)
 		if not cond and IsEnabled then
-			ErrorCount += 1
+			ErrorCount = ErrorCount + 1
 			if tick() - LastErrorTime > 60 then
 				ErrorCount = 1
 				LastErrorTime = tick()
@@ -171,7 +171,7 @@ function AntiCrash:Enable()
 						obj._antiCrashProtected = true
 						obj.Error:Connect(function()
 							if IsEnabled then
-								ErrorCount += 1
+								ErrorCount = ErrorCount + 1
 								if tick() - LastErrorTime > 60 then
 									ErrorCount = 1
 									LastErrorTime = tick()
@@ -188,24 +188,3 @@ function AntiCrash:Enable()
 	if Executor == "Unknown" then
 		warn("AntiCrash: Executor not detected. Behavior may vary.")
 	end
-	return true
-end
-
-function AntiCrash:Disable()
-	IsEnabled = false
-	for instance, methods in pairs(OriginalFunctions) do
-		if typeof(instance) == "Instance" and instance:IsDescendantOf(game) then
-			for methodName, original in pairs(methods) do
-				pcall(function()
-					instance[methodName] = original
-				end)
-			end
-		end
-	end
-	OriginalFunctions = {}
-	ProtectedInstances = {}
-	return true
-end
-
-AntiCrash:Enable()
-return AntiCrash
