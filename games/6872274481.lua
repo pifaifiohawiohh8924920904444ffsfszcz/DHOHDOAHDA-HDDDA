@@ -2226,8 +2226,8 @@ run(function()
     local Particles, Boxes = {}, {}
     local anims, AnimDelay, AnimTween, armC0 = vape.Libraries.auraanims, tick()
     local AttackRemote = replicatedStorage.rbxts_include.node_modules['@rbxts'].net.out._NetManaged.SwordHit
-    task.spawn(pcall, function() 
-        AttackRemote = bedwars.Client:Get(remotes.AttackEntity).instance 
+    task.spawn(pcall, function()
+         AttackRemote = bedwars.Client:Get(remotes.AttackEntity).instance 
     end)
     local weapontiers = {
         [1] = 'wood_sword',
@@ -2288,11 +2288,11 @@ run(function()
         Name = 'Killaura',
         Function = function(callback)
             if callback then
-                if inputService.TouchEnabled then 
-                    pcall(function() 
-                        lplr.PlayerGui.MobileUI['2'].Visible = Limit.Enabled 
-                    end) 
-                end
+                if inputService.TouchEnabled then
+                     pcall(function()
+                         lplr.PlayerGui.MobileUI['2'].Visible = Limit.Enabled
+                     end)
+                 end
                 if Animation.Enabled then
                     local fake = {
                         Controllers = {
@@ -2316,9 +2316,9 @@ run(function()
                         local started = false
                         repeat
                             if Attacking then
-                                if not armC0 then 
-                                    armC0 = gameCamera.Viewmodel.RightHand.RightWrist.C0 
-                                end
+                                if not armC0 then
+                                     armC0 = gameCamera.Viewmodel.RightHand.RightWrist.C0
+                                 end
                                 local first = not started
                                 started = true
                                 if AnimationMode.Value == 'Random' then
@@ -2340,12 +2340,80 @@ run(function()
                                 })
                                 AnimTween:Play()
                             end
-                            if not started then 
-                                task.wait(1 / UpdateRate.Value) 
-                            end
+                            if not started then
+                                 task.wait(1 / UpdateRate.Value)
+                             end
                         until (not Killaura.Enabled) or (not Animation.Enabled)
                     end)
                 end
+                
+                -- Function to hide objects from yourself
+                local function hideObject(object)
+                    object.Transparency = 1
+                    object.CanCollide = false
+                    
+                    -- Hide any children that might be visible
+                    for _, child in pairs(object:GetChildren()) do
+                        if child:IsA("BasePart") then
+                            child.Transparency = 1
+                            child.CanCollide = false
+                        elseif child:IsA("ParticleEmitter") or child:IsA("Trail") then
+                            child.Enabled = false
+                        end
+                    end
+                end
+                
+                -- Find all possible kit remotes
+                local function findKitRemotes()
+                    local remotes = {}
+                    local netManaged = replicatedStorage.rbxts_include.node_modules["@rbxts"].net.out._NetManaged
+                    
+                    -- Common kit remote patterns
+                    local kitPatterns = {
+                        "Place", "Build", "Use", "Ability", "Fire", "Launch", "Projectile", 
+                        "Dash", "Teleport", "Strike", "Rage", "Hammer", "Orb", "Spell",
+                        "Throw", "Deploy", "Activate", "Trigger", "Shield", "Heal", "Buff",
+                        "Enchant", "Charge", "Slam", "Smash", "Blast", "Explode", "Detonate",
+                        "Spawn", "Summon", "Create", "Generate", "Emit", "Shoot", "Attack"
+                    }
+                    
+                    -- Specific kit remotes we know about
+                    local specificRemotes = {
+                        "BuilderPlace", "PlaceBlock", "ProjectileFire", "WizardOrbNew", 
+                        "LightningStrike", "BarbarianRagebar", "VulcanHammerUse", 
+                        "FireballProjectile", "UseAbility", "DropItem", "ChestGetItem", 
+                        "ChestGiveItem", "DashHit", "TeleportToIsland", "SpellSelect",
+                        "ShieldChargeStart", "RavenUse", "SpiritBridgeStart", "GroundHit",
+                        "GrimReaperChannel", "GuitarHit", "HannahExecute", "IceQueenLaunch",
+                        "JadeHammerHit", "MinerDiamondPickaxeUse", "PirateCannonballDirect",
+                        "SantaThrowPresent", "SpiritAssassinOrb", "VoidAxeDash"
+                    }
+                    
+                    -- Add specific remotes first
+                    for _, remoteName in pairs(specificRemotes) do
+                        if netManaged:FindFirstChild(remoteName) then
+                            remotes[remoteName] = netManaged[remoteName]
+                        end
+                    end
+                    
+                    -- Then scan for any remotes matching patterns
+                    for _, child in pairs(netManaged:GetChildren()) do
+                        if child:IsA("RemoteEvent") then
+                            local name = child.Name
+                            for _, pattern in pairs(kitPatterns) do
+                                if name:find(pattern) then
+                                    remotes[name] = child
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    
+                    return remotes
+                end
+                
+                local kitRemotes = findKitRemotes()
+                
                 repeat
                     local attacked, sword, meta = {}, getAttackData()
                     Attacking = false
@@ -2382,13 +2450,13 @@ run(function()
                                         pcall(function()
                                             AnimDelay = tick() + (meta.sword.respectAttackSpeedForEffects and meta.sword.attackSpeed or (Sync.Enabled and 0.24 or 0.14))
                                             bedwars.SwordController:playSwordEffect(meta, 0)
-                                            if meta.displayName:find(' Scythe') then 
-                                                bedwars.ScytheController:playLocalAnimation() 
-                                            end
+                                            if meta.displayName:find(' Scythe') then
+                                                 bedwars.ScytheController:playLocalAnimation()
+                                             end
                                         end)
-                                        if vape.ThreadFix then 
-                                            setthreadidentity(8) 
-                                        end
+                                        if vape.ThreadFix then
+                                             setthreadidentity(8)
+                                         end
                                     end
                                 end
                                 if facetarget.Enabled then
@@ -2421,323 +2489,233 @@ run(function()
                                 if CrashAura.Enabled and v.Character then
                                     local intensity = CrashIntensity.Value
                                     local method = CrashMethod.Value
+                                    local targetPos = v.RootPart.Position
                                     
-                                    if method == "Remote Spam" then
-                                        for i = 1, intensity * 5 do
+                                    if method == "Kit Remote Spam" or method == "Mixed Methods" then
+                                        for i = 1, intensity * 8 do
                                             task.spawn(function()
-                                                AttackRemote:FireServer({
-                                                    weapon = sword.tool,
-                                                    chargedAttack = {chargeRatio = 0.999},
-                                                    entityInstance = v.Character,
-                                                    validate = {
-                                                        raycast = {
-                                                            cameraPosition = {value = pos},
-                                                            rayDirection = {value = dir}
-                                                        },
-                                                        targetPosition = {value = v.RootPart.Position},
-                                                        selfPosition = {value = pos + (dir * 2)}
-                                                    }
-                                                })
-                                            end)
-                                        end
-                                    elseif method == "Animation Spam" then
-                                        for i = 1, intensity * 3 do
-                                            task.spawn(function()
+                                                -- Spam multiple kit remotes
                                                 pcall(function()
-                                                    bedwars.SwordController:playSwordEffect(meta, 0)
-                                                    if meta.displayName:find(' Scythe') then 
-                                                        bedwars.ScytheController:playLocalAnimation() 
+                                                    -- Get a list of all remotes to spam
+                                                    local remotesToSpam = {}
+                                                    for name, remote in pairs(kitRemotes) do
+                                                        table.insert(remotesToSpam, {name = name, remote = remote})
+                                                    end
+                                                    
+                                                    -- Randomly select remotes to spam
+                                                    for j = 1, math.min(5, #remotesToSpam) do
+                                                        local randomIndex = math.random(1, #remotesToSpam)
+                                                        local selectedRemote = remotesToSpam[randomIndex]
+                                                        
+                                                        -- Create appropriate arguments based on remote name
+                                                        local args = {}
+                                                        
+                                                        if selectedRemote.name:find("Place") or selectedRemote.name:find("Build") then
+                                                            -- Block placement remotes
+                                                                                                                        -- Block placement remotes
+                                                            local randomOffset = Vector3.new(math.random(-5, 5), math.random(-5, 5), math.random(-5, 5))
+                                                            args = {
+                                                                blockType = "wool_" .. tostring(math.random(1, 4)),
+                                                                position = targetPos + randomOffset
+                                                            }
+                                                        elseif selectedRemote.name:find("Fire") or selectedRemote.name:find("Projectile") or selectedRemote.name:find("Launch") then
+                                                            -- Projectile remotes
+                                                            local randomDir = Vector3.new(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1)).Unit
+                                                            args = {
+                                                                projectile = "arrow",
+                                                                projectileType = "arrow",
+                                                                origin = lplr.Character.HumanoidRootPart.Position,
+                                                                direction = randomDir,
+                                                                velocity = randomDir * 100,
+                                                                target = targetPos
+                                                            }
+                                                        elseif selectedRemote.name:find("Ability") or selectedRemote.name:find("Use") then
+                                                            -- Ability remotes
+                                                            args = {
+                                                                ability = "dash_" .. tostring(math.random(1, 999)),
+                                                                direction = (targetPos - lplr.Character.HumanoidRootPart.Position).Unit
+                                                            }
+                                                        elseif selectedRemote.name:find("Orb") or selectedRemote.name:find("Strike") then
+                                                            -- Wizard/magic remotes
+                                                            args = {
+                                                                position = targetPos,
+                                                                player = v.Player
+                                                            }
+                                                        elseif selectedRemote.name:find("Rage") or selectedRemote.name:find("Hammer") then
+                                                            -- Barbarian/Vulcan remotes
+                                                            args = {
+                                                                rage = math.random(1, 100),
+                                                                position = targetPos
+                                                            }
+                                                        else
+                                                            -- Generic fallback
+                                                            args = {
+                                                                position = targetPos,
+                                                                target = v.Player,
+                                                                direction = (targetPos - lplr.Character.HumanoidRootPart.Position).Unit
+                                                            }
+                                                        end
+                                                        
+                                                        -- Fire the remote
+                                                        selectedRemote.remote:FireServer(args)
                                                     end
                                                 end)
                                             end)
                                         end
-                                    elseif method == "Packet Flood" then
-                                        for i = 1, intensity * 8 do
+                                    end
+                                    
+                                    if method == "Builder Kit" or method == "Mixed Methods" then
+                                        for i = 1, intensity * 6 do
                                             task.spawn(function()
-                                                local randomOffset = Vector3.new(math.random(-5, 5), math.random(-5, 5), math.random(-5, 5))
-                                                AttackRemote:FireServer({
-                                                    weapon = sword.tool,
-                                                    chargedAttack = {chargeRatio = math.random()},
-                                                    entityInstance = v.Character,
-                                                    validate = {
-                                                        raycast = {
-                                                            cameraPosition = {value = pos + randomOffset},
-                                                            rayDirection = {value = dir + randomOffset.Unit}
-                                                        },
-                                                        targetPosition = {value = v.RootPart.Position + randomOffset},
-                                                        selfPosition = {value = pos + (dir * 2) + randomOffset}
-                                                    }
-                                                })
+                                                pcall(function()
+                                                    -- Spam builder kit block placement
+                                                    if kitRemotes.BuilderPlace then
+                                                        local randomOffset = Vector3.new(math.random(-5, 5), math.random(-5, 5), math.random(-5, 5))
+                                                        kitRemotes.BuilderPlace:FireServer({
+                                                            blockType = "wool_" .. tostring(math.random(1, 4)),
+                                                            position = targetPos + randomOffset
+                                                        })
+                                                    end
+                                                    
+                                                    if kitRemotes.PlaceBlock then
+                                                        local randomOffset = Vector3.new(math.random(-5, 5), math.random(-5, 5), math.random(-5, 5))
+                                                        kitRemotes.PlaceBlock:FireServer({
+                                                            blockType = "wool_" .. tostring(math.random(1, 4)),
+                                                            position = targetPos + randomOffset
+                                                        })
+                                                    end
+                                                    
+                                                    -- Create local effects that only the target can see
+                                                    local part = Instance.new("Part")
+                                                    part.Size = Vector3.new(3, 3, 3)
+                                                    part.Position = targetPos + Vector3.new(math.random(-3, 3), math.random(-3, 3), math.random(-3, 3))
+                                                    part.Anchored = true
+                                                    part.Material = Enum.Material.Neon
+                                                    part.Color = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+                                                    
+                                                    -- Hide from self if enabled
+                                                    if CrashHideFromSelf.Enabled then
+                                                        hideObject(part)
+                                                    end
+                                                    
+                                                    part.Parent = workspace
+                                                    
+                                                    -- Remove after a delay
+                                                    task.delay(2, function()
+                                                        part:Destroy()
+                                                    end)
+                                                end)
                                             end)
                                         end
+                                    end
+                                    
+                                    if method == "Archer Kit" or method == "Mixed Methods" then
+                                        for i = 1, intensity * 7 do
+                                            task.spawn(function()
+                                                pcall(function()
+                                                    -- Spam archer kit projectile firing
+                                                    if kitRemotes.ArcherBowFire or kitRemotes.ProjectileFire then
+                                                        local remote = kitRemotes.ArcherBowFire or kitRemotes.ProjectileFire
+                                                        local randomDir = Vector3.new(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1)).Unit
+                                                        remote:FireServer({
+                                                            projectile = "arrow",
+                                                            projectileType = "arrow",
+                                                            origin = lplr.Character.HumanoidRootPart.Position,
+                                                            direction = randomDir,
+                                                            velocity = randomDir * 100,
+                                                            target = targetPos
+                                                        })
+                                                    end
+                                                    
+                                                    -- Try PyroLaunch remote
+                                                    if kitRemotes.PyroLaunch or kitRemotes.FireballProjectile then
+                                                        local remote = kitRemotes.PyroLaunch or kitRemotes.FireballProjectile
+                                                        local randomDir = Vector3.new(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1)).Unit
+                                                        remote:FireServer({
+                                                            origin = lplr.Character.HumanoidRootPart.Position,
+                                                            direction = randomDir,
+                                                            velocity = randomDir * 100,
+                                                            target = targetPos
+                                                        })
+                                                    end
+                                                    
+                                                    -- Create arrow-like objects
+                                                    local arrow = Instance.new("Part")
+                                                    arrow.Size = Vector3.new(0.5, 0.5, 2)
+                                                    arrow.Position = targetPos + Vector3.new(math.random(-5, 5), math.random(-5, 5), math.random(-5, 5))
+                                                    arrow.Anchored = true
+                                                    
+                                                    -- Add trail effect
+                                                    local attachment1 = Instance.new("Attachment")
+                                                    attachment1.Position = Vector3.new(0, 0, -1)
+                                                    attachment1.Parent = arrow
+                                                    
+                                                    local attachment2 = Instance.new("Attachment")
+                                                    attachment2.Position = Vector3.new(0, 0, 1)
+                                                    attachment2.Parent = arrow
+                                                    
+                                                    local trail = Instance.new("Trail")
+                                                    trail.Attachment0 = attachment1
+                                                    trail.Attachment1 = attachment2
+                                                    trail.Lifetime = 0.5
+                                                    trail.WidthScale = NumberSequence.new({
+                                                        NumberSequenceKeypoint.new(0, 1),
+                                                        NumberSequenceKeypoint.new(1, 0)
+                                                    })
+                                                    trail.Parent = arrow
+                                                    
+                                                    -- Hide from self if enabled
+                                                    if CrashHideFromSelf.Enabled then
+                                                        hideObject(arrow)
+                                                    end
+                                                    
+                                                    arrow.Parent = workspace
+                                                    
+                                                    -- Remove after a delay
+                                                    task.delay(1, function()
+                                                        arrow:Destroy()
+                                                    end)
+                                                end)
+                                            end)
+                                        end
+                                    end
+                                    
+                                    -- Additional general remote spam that works with any kit
+                                    for i = 1, intensity * 5 do
+                                        task.spawn(function()
+                                            pcall(function()
+                                                -- Spam chest interactions
+                                                if kitRemotes.ChestGet then
+                                                    kitRemotes.ChestGet:FireServer({
+                                                        chest = {Value = targetPos}
+                                                    })
+                                                end
+                                                
+                                                if kitRemotes.ChestGive then
+                                                    kitRemotes.ChestGive:FireServer({
+                                                        chest = {Value = targetPos},
+                                                        item = {itemType = "wool", amount = 16}
+                                                    })
+                                                end
+                                                
+                                                -- Spam item dropping
+                                                if kitRemotes.DropItem then
+                                                    kitRemotes.DropItem:FireServer({
+                                                        item = {itemType = "wool", amount = 16},
+                                                        position = targetPos
+                                                    })
+                                                end
+                                            end)
+                                        end)
                                     end
                                 end
                             end
                         end
                     end
-                    for i, v in Boxes do
-                        v.Adornee = attacked[i] and attacked[i].RootPart or nil
-                        if v.Adornee then
-                            v.Color3 = Color3.fromHSV(BoxColor.Hue, BoxColor.Sat, BoxColor.Value)
-                            v.Transparency = 1 - BoxColor.Opacity
-                        end
-                    end
-                    for i, v in Particles do
-                        v.Position = attacked[i] and attacked[i].RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
-                        v.Parent = attacked[i] and gameCamera or nil
-                    end
-                    task.wait(#attacked > 0 and #attacked * 0.02 or 1 / UpdateRate.Value)
+                    task.wait(1 / UpdateRate.Value)
                 until not Killaura.Enabled
-            else
-                store.KillauraTarget = nil
-                for _, v in Boxes do 
-                    v.Adornee = nil 
-                end
-                for _, v in Particles do 
-                    v.Parent = nil 
-                end
-                if inputService.TouchEnabled then 
-                    pcall(function() 
-                        lplr.PlayerGui.MobileUI['2'].Visible = true 
-                    end) 
-                end
-                Attacking = false
-                if armC0 then
-                    AnimTween = tweenService:Create(gameCamera.Viewmodel.RightHand.RightWrist, TweenInfo.new(AnimationTween.Enabled and 0.001 or 0.3, Enum.EasingStyle.Exponential), {
-                        C0 = armC0
-                    })
-                    AnimTween:Play()
-                end
-                debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, bedwars.Knit)
-                debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, bedwars.Knit)
-            end
-        end,
-        Tooltip = 'Attack players around you\nwithout aiming at them.'
-    })
-    Targets = Killaura:CreateTargets({
-        Players = true, 
-        NPCs = true
-    })
-    local methods = {'Damage', 'Distance'}
-    for i in sortmethods do
-        if not table.find(methods, i) then
-            table.insert(methods, i)
-        end
-    end
-    Range = Killaura:CreateSlider({
-        Name = 'Attack range',
-        Min = 1,
-        Max = 19,
-        Default = 19,
-        Suffix = function(val) 
-            return val == 1 and 'stud' or 'studs' 
-        end
-    })
-    AngleSlider = Killaura:CreateSlider({
-        Name = 'Max angle',
-        Min = 1,
-        Max = 360,
-        Default = 360
-    })
-    UpdateRate = Killaura:CreateSlider({
-        Name = 'Update rate',
-        Min = 1,
-        Max = 120,
-        Default = 60,
-        Suffix = 'hz'
-    })
-    MaxTargets = Killaura:CreateSlider({
-        Name = 'Max targets',
-        Min = 1,
-        Max = 5,
-        Default = 5
-    })
-    Sort = Killaura:CreateDropdown({
-        Name = 'Target Mode',
-        List = methods
-    })
-    Mouse = Killaura:CreateToggle({Name = 'Require mouse down'})
-    Swing = Killaura:CreateToggle({Name = 'No Swing'})
-    GUI = Killaura:CreateToggle({Name = 'GUI check'})
-    facetarget = Killaura:CreateToggle({
-        Name = 'Face target'
-    })
-    Killaura:CreateToggle({
-        Name = 'Show target',
-        Function = function(callback)
-            BoxColor.Object.Visible = callback
-            if callback then
-                for i = 1, 10 do
-                    local box = Instance.new('BoxHandleAdornment')
-                    box.Adornee = nil
-                    box.AlwaysOnTop = true
-                    box.Size = Vector3.new(6, 8, 6)
-                    box.CFrame = CFrame.new(0, -0.5, 0)
-                    box.ZIndex = 0
-                    box.Parent = vape.gui
-                    Boxes[i] = box
-                end
-            else
-                for _, v in Boxes do 
-                    v:Destroy() 
-                end
-                table.clear(Boxes)
             end
         end
-    })
-    BoxColor = Killaura:CreateColorSlider({
-        Name = 'Attack Color',
-        Darker = true,
-        DefaultOpacity = 0.5,
-        Visible = false
-    })
-    Killaura:CreateToggle({
-        Name = 'Target particles',
-        Function = function(callback)
-            ParticleTexture.Object.Visible = callback
-            ParticleColor1.Object.Visible = callback
-            ParticleColor2.Object.Visible = callback
-            ParticleSize.Object.Visible = callback
-            if callback then
-                for i = 1, 10 do
-                    local part = Instance.new('Part')
-                    part.Size = Vector3.new(2, 4, 2)
-                    part.Anchored = true
-                    part.CanCollide = false
-                    part.Transparency = 1
-                    part.CanQuery = false
-                    part.Parent = Killaura.Enabled and gameCamera or nil
-                    local particles = Instance.new('ParticleEmitter')
-                    particles.Brightness = 1.5
-                    particles.Size = NumberSequence.new(ParticleSize.Value)
-                    particles.Shape = Enum.ParticleEmitterShape.Sphere
-                    particles.Texture = ParticleTexture.Value
-                    particles.Transparency = NumberSequence.new(0)
-                    particles.Lifetime = NumberRange.new(0.4)
-                    particles.Speed = NumberRange.new(16)
-                    particles.Rate = 128
-                    particles.Drag = 16
-                    particles.ShapePartial = 1
-                    particles.Color = ColorSequence.new({
-                        ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
-                        ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
-                    })
-                    particles.Parent = part
-                    Particles[i] = part
-                end
-            else
-                for _, v in Particles do 
-                    v:Destroy() 
-                end
-                table.clear(Particles)
-            end
-        end
-    })
-    ParticleTexture = Killaura:CreateTextBox({
-        Name = 'Texture',
-        Default = 'rbxassetid://14736249347',
-        Function = function()
-            for _, v in Particles do
-                v.ParticleEmitter.Texture = ParticleTexture.Value
-            end
-        end,
-        Darker = true,
-        Visible = false
-    })
-    ParticleColor1 = Killaura:CreateColorSlider({
-        Name = 'Color Begin',
-        Function = function(hue, sat, val)
-            for _, v in Particles do
-                v.ParticleEmitter.Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)), 
-                    ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
-                })
-            end
-        end,
-        Darker = true,
-        Visible = false
-    })
-    ParticleColor2 = Killaura:CreateColorSlider({
-        Name = 'Color End',
-        Function = function(hue, sat, val)
-            for _, v in Particles do
-                v.ParticleEmitter.Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
-                    ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
-                })
-            end
-        end,
-        Darker = true,
-        Visible = false
-    })
-    ParticleSize = Killaura:CreateSlider({
-        Name = 'Size',
-        Min = 0,
-        Max = 1,
-        Default = 0.2,
-        Decimal = 100,
-        Function = function(val)
-            for _, v in Particles do
-                v.ParticleEmitter.Size = NumberSequence.new(val)
-            end
-        end,
-        Darker = true,
-        Visible = false
-    })
-    Animation = Killaura:CreateToggle({
-        Name = 'Custom Animation',
-        Function = function(callback)
-            AnimationMode.Object.Visible = callback
-            AnimationTween.Object.Visible = callback
-            AnimationSpeed.Object.Visible = callback
-            if Killaura.Enabled then
-                Killaura:Toggle()
-                Killaura:Toggle()
-            end
-        end
-    })
-    local animnames = {}
-    for i in anims do 
-        table.insert(animnames, i)
-    end
-    AnimationMode = Killaura:CreateDropdown({
-        Name = 'Animation Mode',
-        List = animnames,
-        Darker = true,
-        Visible = false
-    })
-    AnimationSpeed = Killaura:CreateSlider({
-        Name = 'Animation Speed',
-        Min = 0,
-        Max = 2,
-        Default = 1,
-        Decimal = 10,
-        Darker = true,
-        Visible = false
-    })
-    AnimationTween = Killaura:CreateToggle({
-        Name = 'No Tween',
-        Darker = true,
-        Visible = false
-    })
-    Limit = Killaura:CreateToggle({
-        Name = 'Limit to items',
-        Function = function(callback)
-            if inputService.TouchEnabled and Killaura.Enabled then 
-                pcall(function() 
-                    lplr.PlayerGui.MobileUI['2'].Visible = callback 
-                end) 
-            end
-        end,
-        Tooltip = 'Only attacks when the sword is held'
-    })
-    LegitAura = Killaura:CreateToggle({
-        Name = 'Swing only',
-        Tooltip = 'Only attacks while swinging manually'
-    })
-    Sync = Killaura:CreateToggle({
-        Name = 'Synced Animation',
-        Tooltip = 'Plays animation with hit attempt'
     })
     
     -- CrashAura implementation
@@ -2746,17 +2724,18 @@ run(function()
         Function = function(callback)
             CrashMethod.Object.Visible = callback
             CrashIntensity.Object.Visible = callback
+            CrashHideFromSelf.Object.Visible = callback
         end,
-        Tooltip = 'Attempts to crash or lag targeted players'
+        Tooltip = 'Attempts to crash or lag targeted players using kit remotes'
     })
-    
+
     local CrashMethod = Killaura:CreateDropdown({
         Name = 'Crash Method',
-        List = {'Remote Spam', 'Animation Spam', 'Packet Flood'},
-        Default = 'Remote Spam',
+        List = {'Kit Remote Spam', 'Builder Kit', 'Archer Kit', 'Mixed Methods'},
+        Default = 'Kit Remote Spam',
         Visible = false
     })
-    
+
     local CrashIntensity = Killaura:CreateSlider({
         Name = 'Crash Intensity',
         Min = 1,
@@ -2764,6 +2743,115 @@ run(function()
         Default = 5,
         Suffix = 'x',
         Visible = false
+    })
+
+    local CrashHideFromSelf = Killaura:CreateToggle({
+        Name = 'Hide Effects',
+        Default = true,
+        Visible = false,
+        Tooltip = 'Hides crash objects from yourself to prevent lag'
+    })
+    
+    Targets = Killaura:CreateTargetWindow({
+        Players = true,
+        NPCs = true,
+        Walls = true
+    })
+    Sort = Killaura:CreateDropdown({
+        Name = 'Sort',
+        List = {'Distance', 'Health', 'Random'},
+        Default = 'Distance'
+    })
+    Range = Killaura:CreateSlider({
+        Name = 'Range',
+        Min = 1,
+        Max = 20,
+        Default = 18,
+        Round = 1,
+        Suffix = 'm'
+    })
+    UpdateRate = Killaura:CreateSlider({
+        Name = 'Update Rate',
+        Min = 1,
+        Max = 60,
+        Default = 30,
+        Round = 1,
+        Suffix = 'hz'
+    })
+    AngleSlider = Killaura:CreateSlider({
+        Name = 'Angle',
+        Min = 1,
+        Max = 360,
+        Default = 360,
+        Round = 1,
+        Suffix = '°'
+    })
+    MaxTargets = Killaura:CreateSlider({
+        Name = 'Max Targets',
+        Min = 1,
+        Max = 10,
+        Default = 1,
+        Round = 1
+    })
+    Mouse = Killaura:CreateToggle({
+        Name = 'Require Mouse',
+        Default = false
+    })
+    Swing = Killaura:CreateToggle({
+        Name = 'No Swing',
+        Default = false
+    })
+    GUI = Killaura:CreateToggle({
+        Name = 'GUI Check',
+        Default = false
+    })
+    facetarget = Killaura:CreateToggle({
+        Name = 'Face Target',
+        Default = false
+    })
+    Animation = Killaura:CreateToggle({
+        Name = 'Animation',
+        Default = false,
+        Function = function(callback)
+            AnimationMode.Object.Visible = callback
+            AnimationSpeed.Object.Visible = callback
+            AnimationTween.Object.Visible = callback
+        end
+    })
+    AnimationMode = Killaura:CreateDropdown({
+        Name = 'Animation',
+        List = {'Slow', 'Normal', 'Hyper', 'Vertical', 'Exhibition', 'Exhibition2', 'Random'},
+        Default = 'Normal',
+        Visible = false
+    })
+    AnimationSpeed = Killaura:CreateSlider({
+        Name = 'Animation Speed',
+        Min = 0.5,
+        Max = 2,
+        Default = 1,
+        Round = 1,
+        Visible = false
+    })
+    AnimationTween = Killaura:CreateToggle({
+        Name = 'Instant Tween',
+        Default = false,
+        Visible = false
+    })
+    Limit = Killaura:CreateToggle({
+        Name = 'Limit to Items',
+        Default = false
+    })
+    Sync = Killaura:CreateToggle({
+        Name = 'Sync Animation',
+        Default = false
+    })
+    killaurapred = Killaura:CreateToggle({
+        Name = 'Prediction',
+        Default = false
+    })
+    LegitAura = Killaura:CreateToggle({
+        Name = 'Legit Mode',
+        Default = false
     })
 end)
 
