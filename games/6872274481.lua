@@ -2740,234 +2740,33 @@ run(function()
         Tooltip = 'Plays animation with hit attempt'
     })
     
--- Enhanced CrashAura implementation
-local CrashAura = Killaura:CreateToggle({
-    Name = 'Crash Aura',
-    Function = function(callback)
-        CrashMethod.Object.Visible = callback
-        CrashIntensity.Object.Visible = callback
-        CrashDelay.Object.Visible = callback
-        CrashAdvanced.Object.Visible = callback
-    end,
-    Tooltip = 'Attempts to crash or lag targeted players'
-})
-
-local CrashMethod = Killaura:CreateDropdown({
-    Name = 'Crash Method',
-    List = {'Remote Spam', 'Animation Spam', 'Packet Flood', 'Hybrid Attack', 'Memory Flood'},
-    Default = 'Hybrid Attack',
-    Visible = false
-})
-
-local CrashIntensity = Killaura:CreateSlider({
-    Name = 'Crash Intensity',
-    Min = 1,
-    Max = 20,
-    Default = 8,
-    Suffix = 'x',
-    Visible = false
-})
-
-local CrashDelay = Killaura:CreateSlider({
-    Name = 'Crash Delay',
-    Min = 0,
-    Max = 1,
-    Default = 0.1,
-    Decimal = 100,
-    Suffix = 's',
-    Visible = false
-})
-
-local CrashAdvanced = Killaura:CreateToggle({
-    Name = 'Advanced Mode',
-    Default = false,
-    Visible = false,
-    Tooltip = 'Uses more sophisticated methods'
-})
-
--- Add this inside the attack loop where CrashAura is implemented
-if CrashAura.Enabled and v.Character then
-    local intensity = CrashIntensity.Value
-    local method = CrashMethod.Value
-    local advanced = CrashAdvanced.Enabled
+    -- CrashAura implementation
+    local CrashAura = Killaura:CreateToggle({
+        Name = 'Crash Aura',
+        Function = function(callback)
+            CrashMethod.Object.Visible = callback
+            CrashIntensity.Object.Visible = callback
+        end,
+        Tooltip = 'Attempts to crash or lag targeted players'
+    })
     
-    -- Create a separate thread for crash operations
-    task.spawn(function()
-        -- Generate a large number of random positions for variation
-        local randomPositions = {}
-        for i = 1, advanced and 20 or 10 do
-            table.insert(randomPositions, Vector3.new(
-                math.random(-10, 10) + (math.random() * 2 - 1),
-                math.random(-10, 10) + (math.random() * 2 - 1),
-                math.random(-10, 10) + (math.random() * 2 - 1)
-            ))
-        end
-        
-        if method == "Remote Spam" then
-            for i = 1, intensity * (advanced and 8 or 5) do
-                task.spawn(function()
-                    for j = 1, advanced and 3 or 1 do
-                        local randPos = randomPositions[math.random(1, #randomPositions)]
-                        AttackRemote:FireServer({
-                            weapon = sword.tool,
-                            chargedAttack = {chargeRatio = advanced and math.random() or 0.999},
-                            entityInstance = v.Character,
-                            validate = {
-                                raycast = {
-                                    cameraPosition = {value = pos + randPos},
-                                    rayDirection = {value = dir + randPos.Unit}
-                                },
-                                targetPosition = {value = v.RootPart.Position + randPos},
-                                selfPosition = {value = pos + (dir * 2) + randPos}
-                            }
-                        })
-                    end
-                end)
-                if CrashDelay.Value > 0 then task.wait(CrashDelay.Value / intensity) end
-            end
-            
-        elseif method == "Animation Spam" then
-            for i = 1, intensity * (advanced and 5 or 3) do
-                task.spawn(function()
-                    for j = 1, advanced and 4 or 2 do
-                        pcall(function()
-                            bedwars.SwordController:playSwordEffect(meta, advanced and math.random() or 0)
-                            if meta.displayName:find(' Scythe') then 
-                                bedwars.ScytheController:playLocalAnimation() 
-                            end
-                        end)
-                    end
-                end)
-                if CrashDelay.Value > 0 then task.wait(CrashDelay.Value / intensity) end
-            end
-            
-        elseif method == "Packet Flood" then
-            for i = 1, intensity * (advanced and 12 or 8) do
-                task.spawn(function()
-                    for j = 1, advanced and 3 or 1 do
-                        local randPos = randomPositions[math.random(1, #randomPositions)]
-                        AttackRemote:FireServer({
-                            weapon = sword.tool,
-                            chargedAttack = {
-                                chargeRatio = math.random(),
-                                requestedTime = workspace:GetServerTimeNow() - math.random(0, 10)
-                            },
-                            entityInstance = v.Character,
-                            validate = {
-                                raycast = {
-                                    cameraPosition = {value = pos + randPos},
-                                    rayDirection = {value = dir + randPos.Unit}
-                                },
-                                targetPosition = {value = v.RootPart.Position + randPos},
-                                selfPosition = {value = pos + (dir * 2) + randPos}
-                            }
-                        })
-                    end
-                end)
-                if CrashDelay.Value > 0 then task.wait(CrashDelay.Value / intensity) end
-            end
-            
-        elseif method == "Hybrid Attack" then
-            -- Combines multiple methods for maximum effect
-            for i = 1, intensity * (advanced and 6 or 4) do
-                task.spawn(function()
-                    -- Remote spam component
-                    for j = 1, advanced and 2 or 1 do
-                        local randPos = randomPositions[math.random(1, #randomPositions)]
-                        AttackRemote:FireServer({
-                            weapon = sword.tool,
-                            chargedAttack = {chargeRatio = math.random()},
-                            entityInstance = v.Character,
-                            validate = {
-                                raycast = {
-                                    cameraPosition = {value = pos + randPos},
-                                    rayDirection = {value = dir + randPos.Unit}
-                                },
-                                targetPosition = {value = v.RootPart.Position + randPos},
-                                selfPosition = {value = pos + (dir * 2) + randPos}
-                            }
-                        })
-                    end
-                    
-                    -- Animation component
-                    pcall(function()
-                        bedwars.SwordController:playSwordEffect(meta, math.random())
-                        if meta.displayName:find(' Scythe') then 
-                            bedwars.ScytheController:playLocalAnimation() 
-                        end
-                    end)
-                    
-                    -- Additional packet component if advanced
-                    if advanced then
-                        local randPos = randomPositions[math.random(1, #randomPositions)]
-                        AttackRemote:FireServer({
-                            weapon = sword.tool,
-                            chargedAttack = {
-                                chargeRatio = 0.999,
-                                requestedTime = workspace:GetServerTimeNow() - math.random(0, 5)
-                            },
-                            entityInstance = v.Character,
-                            validate = {
-                                raycast = {
-                                    cameraPosition = {value = pos + randPos * 2},
-                                    rayDirection = {value = dir + (randPos * 2).Unit}
-                                },
-                                targetPosition = {value = v.RootPart.Position + randPos * 2},
-                                selfPosition = {value = pos + (dir * 4) + randPos * 2}
-                            }
-                        })
-                    end
-                end)
-                if CrashDelay.Value > 0 then task.wait(CrashDelay.Value / intensity) end
-            end
-            
-        elseif method == "Memory Flood" then
-            -- Attempts to create memory pressure on the server
-            for i = 1, intensity * (advanced and 7 or 4) do
-                task.spawn(function()
-                    -- Create large tables with random data
-                    local largeData = {}
-                    for j = 1, advanced and 50 or 20 do
-                        largeData[j] = {
-                            pos = randomPositions[math.random(1, #randomPositions)],
-                            time = workspace:GetServerTimeNow() - math.random(),
-                            ratio = math.random(),
-                            extra = advanced and {
-                                values = {math.random(), math.random(), math.random()},
-                                positions = {Vector3.new(math.random(-10, 10), math.random(-10, 10), math.random(-10, 10))}
-                            } or nil
-                        }
-                    end
-                    
-                    -- Send multiple packets with the large data
-                    for j = 1, advanced and 3 or 1 do
-                        local randPos = randomPositions[math.random(1, #randomPositions)]
-                        local randData = largeData[math.random(1, #largeData)]
-                        
-                        AttackRemote:FireServer({
-                            weapon = sword.tool,
-                            chargedAttack = {
-                                chargeRatio = randData.ratio,
-                                requestedTime = randData.time
-                            },
-                            entityInstance = v.Character,
-                            validate = {
-                                raycast = {
-                                    cameraPosition = {value = pos + randData.pos},
-                                    rayDirection = {value = dir + randData.pos.Unit}
-                                },
-                                targetPosition = {value = v.RootPart.Position + randData.pos},
-                                selfPosition = {value = pos + (dir * 2) + randData.pos},
-                                extraData = advanced and randData.extra or nil
-                            }
-                        })
-                    end
-                end)
-                if CrashDelay.Value > 0 then task.wait(CrashDelay.Value / intensity) end
-            end
-        end
-    end)
-end
+    local CrashMethod = Killaura:CreateDropdown({
+        Name = 'Crash Method',
+        List = {'Remote Spam', 'Animation Spam', 'Packet Flood'},
+        Default = 'Remote Spam',
+        Visible = false
+    })
+    
+    local CrashIntensity = Killaura:CreateSlider({
+        Name = 'Crash Intensity',
+        Min = 1,
+        Max = 10,
+        Default = 5,
+        Suffix = 'x',
+        Visible = false
+    })
+end)
+
 run(function()
 	local Value
 	local CameraDir
