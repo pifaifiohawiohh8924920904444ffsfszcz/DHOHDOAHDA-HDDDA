@@ -1,74 +1,67 @@
+local old_require = require
+getgenv().require = function(path)
+    setthreadidentity(2)
+    local _ = old_require(path)
+    setthreadidentity(8)
+    return _
+end
+
+local isfile = isfile or function(file)
+	local suc, res = pcall(function()
+		return readfile(file)
+	end)
+	return suc and res ~= nil and res ~= ''
+end
+local delfile = delfile or function(file)
+	writefile(file, '')
+end
+
 local function downloadFile(path, func)
-    if not isfile(path) then
-        local suc, res = pcall(function()
-            local commit = readfile('newvape/profiles/commit.txt')
-            local filePath = path:gsub('newvape/', '')
-            return game:HttpGet('https://raw.githubusercontent.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA/' .. commit .. '/' .. filePath, true)
-        end)
-
-        if not suc or res == '404: Not Found' then
-            warn("Failed to download file: " .. tostring(res))
-            return nil
-        end
-
-        if path:find('%.lua') then
-            res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n' .. res
-        end
-
-        pcall(function() writefile(path, res) end)
-    end
-
-    return (func or readfile)(path)
+	if not isfile(path) then
+		local suc, res = pcall(function()
+			return game:HttpGet('https://raw.githubusercontent.com/wrealaero/NewAeroV4/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+		end)
+		if not suc or res == '404: Not Found' then
+			error(res)
+		end
+		if path:find('.lua') then
+			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
+		end
+		writefile(path, res)
+	end
+	return (func or readfile)(path)
 end
 
 local function wipeFolder(path)
-    if not isfolder(path) then return end
-    for _, file in ipairs(listfiles(path)) do
-        if file:find('loader') then continue end
-        if isfile(file) then
-            local content = readfile(file)
-            if content:find('^%-%-This watermark is used to delete the file if its cached') then
-                delfile(file)
-            end
-        end
-    end
+	if not isfolder(path) then return end
+	for _, file in listfiles(path) do
+		if file:find('loader') then continue end
+		if isfile(file) and select(1, readfile(file):find('--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.')) == 1 then
+			delfile(file)
+		end
+	end
 end
 
-for _, folder in ipairs({'newvape', 'newvape/games', 'newvape/profiles', 'newvape/assets', 'newvape/libraries', 'newvape/guis'}) do
-    if not isfolder(folder) then
-        pcall(function() makefolder(folder) end)
-    end
+for _, folder in {'newvape', 'newvape/games', 'newvape/profiles', 'newvape/assets', 'newvape/libraries', 'newvape/guis'} do
+	if not isfolder(folder) then
+		makefolder(folder)
+	end
 end
 
 if not shared.VapeDeveloper then
-    local _, subbed = pcall(function()
-        return game:HttpGet('https://github.com/pifaifiohawiohh8924920904444ffsfszcz/DHOHDOAHDA-HDDDA')
-    end)
-
-    if subbed then
-        local commit = subbed:match('currentOid%s*:%s*"([a-f0-9]+)"') or 'main'
-        local current = isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or ''
-
-        if commit == 'main' or current ~= commit then
-            wipeFolder('newvape')
-            wipeFolder('newvape/games')
-            wipeFolder('newvape/guis')
-            wipeFolder('newvape/libraries')
-        end
-
-        pcall(function() writefile('newvape/profiles/commit.txt', commit) end)
-    end
+	local _, subbed = pcall(function()
+		return game:HttpGet('https://github.com/wrealaero/NewAeroV4')
+	end)
+	local commit = subbed:find('currentOid')
+	commit = commit and subbed:sub(commit + 13, commit + 52) or nil
+	commit = commit and #commit == 40 and commit or 'main'
+	if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit then
+		wipeFolder('newvape')
+		wipeFolder('newvape/games')
+		wipeFolder('newvape/guis')
+		wipeFolder('newvape/libraries')
+	end
+	writefile('newvape/profiles/commit.txt', commit)
 end
 
-local success, err = pcall(function()
-    local mainCode = downloadFile('newvape/main.lua')
-    if mainCode then
-        loadstring(mainCode, 'main')()
-    else
-        error("Download returned nil")
-    end
-end)
-
-if not success then
-    warn("Failed to load script, check ur executer..: " .. tostring(err))
-end
+return loadstring(downloadFile('newvape/main.lua'), 'main')()
